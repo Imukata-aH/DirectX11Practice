@@ -275,7 +275,7 @@ LRESULT D3DApp::MsgProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
 			}
 			return 0;
 
-			// WM_EXITSIZEMOVE is sent when the user grabs the resize bars.
+			// WM_ENTERSIZEMOVE is sent when the user grabs the resize bars.
 		case WM_ENTERSIZEMOVE:
 			mAppPaused = true;
 			mResizing = true;
