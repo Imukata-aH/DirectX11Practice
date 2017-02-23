@@ -150,6 +150,7 @@
     <ClCompile Include="..\Common\d3dUtil.cpp" />
     <ClCompile Include="..\Common\GameTimer.cpp" />
     <ClCompile Include="..\Common\MathHelper.cpp" />
+    <ClCompile Include="..\Common\ShaderHelper.cpp" />
     <ClCompile Include="src\box_demo.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -179,6 +180,7 @@
     <ClInclude Include="..\Common\d3dUtil.h" />
     <ClInclude Include="..\Common\GameTimer.h" />
     <ClInclude Include="..\Common\MathHelper.h" />
+    <ClInclude Include="..\Common\ShaderHelper.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
