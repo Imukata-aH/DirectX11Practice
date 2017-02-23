@@ -176,11 +176,16 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Common\ConstantBuffer.h" />
     <ClInclude Include="..\Common\d3dApp.h" />
     <ClInclude Include="..\Common\d3dUtil.h" />
     <ClInclude Include="..\Common\GameTimer.h" />
     <ClInclude Include="..\Common\MathHelper.h" />
     <ClInclude Include="..\Common\ShaderHelper.h" />
+    <ClInclude Include="include\cbPerObject.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

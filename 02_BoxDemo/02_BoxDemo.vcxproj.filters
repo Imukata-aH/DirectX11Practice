@@ -64,5 +64,11 @@
     <ClInclude Include="..\Common\ShaderHelper.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="include\cbPerObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\ConstantBuffer.h">
+      <Filter>common</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
