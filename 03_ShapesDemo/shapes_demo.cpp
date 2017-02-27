@@ -5,6 +5,7 @@
 #include "cbPerObject.h"
 #include "ConstantBuffer.h"
 #include "ShaderHelper.h"
+#include "GeometryGenerator.h"
 using namespace DirectX;
 
 struct Vertex
@@ -13,11 +14,11 @@ struct Vertex
 	XMFLOAT4 Color;
 };
 
-class BoxApp : public D3DApp
+class ShapesApp : public D3DApp
 {
 public:
-	BoxApp( HINSTANCE hInstance );
-	~BoxApp();
+	ShapesApp( HINSTANCE hInstance );
+	~ShapesApp();
 
 	bool Init();
 	void OnResize();
@@ -36,8 +37,8 @@ private:
 
 private:
 	ConstantBuffer<cbPerObject> mObjectConstantBuffer;
-	ID3D11Buffer* mBoxVB;
-	ID3D11Buffer* mBoxIB;
+	ID3D11Buffer* mVB;
+	ID3D11Buffer* mIB;
 	ID3DBlob* mPSBlob;
 	ID3DBlob* mVSBlob;
 	ID3D11PixelShader* mPixelShader;
@@ -64,7 +65,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE prevInstance,
 	_CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
 #endif
 
-	BoxApp theApp( hInstance );
+	ShapesApp theApp( hInstance );
 
 	if ( !theApp.Init() )
 		return 0;
@@ -73,8 +74,8 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE prevInstance,
 }
 
 
-BoxApp::BoxApp( HINSTANCE hInstance )
-	: D3DApp( hInstance ), mBoxVB( 0 ), mBoxIB( 0 ), mInputLayout( 0 ),
+ShapesApp::ShapesApp( HINSTANCE hInstance )
+	: D3DApp( hInstance ), mVB( 0 ), mIB( 0 ), mInputLayout( 0 ),
 	mTheta( 1.5f*MathHelper::Pi ), mPhi( 0.25f*MathHelper::Pi ), mRadius( 5.0f )
 {
 	mMainWndCaption = L"Box Demo";
@@ -88,16 +89,16 @@ BoxApp::BoxApp( HINSTANCE hInstance )
 	XMStoreFloat4x4( &mProj, I );
 }
 
-BoxApp::~BoxApp()
+ShapesApp::~ShapesApp()
 {
-	ReleaseCOM( mBoxVB );
-	ReleaseCOM( mBoxIB );
+	ReleaseCOM( mVB );
+	ReleaseCOM( mIB );
 	ReleaseCOM( mInputLayout );
 	ReleaseCOM( mPSBlob );
 	ReleaseCOM( mVSBlob );
 }
 
-bool BoxApp::Init()
+bool ShapesApp::Init()
 {
 	if ( !D3DApp::Init() )
 		return false;
@@ -111,7 +112,7 @@ bool BoxApp::Init()
 	return true;
 }
 
-void BoxApp::OnResize()
+void ShapesApp::OnResize()
 {
 	D3DApp::OnResize();
 
@@ -120,7 +121,7 @@ void BoxApp::OnResize()
 	XMStoreFloat4x4( &mProj, P );
 }
 
-void BoxApp::UpdateScene( float dt )
+void ShapesApp::UpdateScene( float dt )
 {
 	// Convert Spherical to Cartesian coordinates.
 	float x = mRadius*sinf( mPhi )*cosf( mTheta );
@@ -136,7 +137,7 @@ void BoxApp::UpdateScene( float dt )
 	XMStoreFloat4x4( &mView, V );
 }
 
-void BoxApp::DrawScene()
+void ShapesApp::DrawScene()
 {
 	md3dImmediateContext->IASetInputLayout( mInputLayout );
 	md3dImmediateContext->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
@@ -150,8 +151,8 @@ void BoxApp::DrawScene()
 
 	UINT stride = sizeof( Vertex );
 	UINT offset = 0;
-	md3dImmediateContext->IASetVertexBuffers( 0, 1, &mBoxVB, &stride, &offset );
-	md3dImmediateContext->IASetIndexBuffer( mBoxIB, DXGI_FORMAT_R32_UINT, 0 );
+	md3dImmediateContext->IASetVertexBuffers( 0, 1, &mVB, &stride, &offset );
+	md3dImmediateContext->IASetIndexBuffer( mIB, DXGI_FORMAT_R32_UINT, 0 );
 
 	// Set constants
 	XMMATRIX world = XMLoadFloat4x4( &mWorld );
@@ -176,7 +177,7 @@ void BoxApp::DrawScene()
 	HR( mSwapChain->Present( 0, 0 ) );
 }
 
-void BoxApp::OnMouseDown( WPARAM btnState, int x, int y )
+void ShapesApp::OnMouseDown( WPARAM btnState, int x, int y )
 {
 	mLastMousePos.x = x;
 	mLastMousePos.y = y;
@@ -184,12 +185,12 @@ void BoxApp::OnMouseDown( WPARAM btnState, int x, int y )
 	SetCapture( mhMainWnd );
 }
 
-void BoxApp::OnMouseUp( WPARAM btnState, int x, int y )
+void ShapesApp::OnMouseUp( WPARAM btnState, int x, int y )
 {
 	ReleaseCapture();
 }
 
-void BoxApp::OnMouseMove( WPARAM btnState, int x, int y )
+void ShapesApp::OnMouseMove( WPARAM btnState, int x, int y )
 {
 	if ( ( btnState & MK_LBUTTON ) != 0 )
 	{
@@ -221,74 +222,43 @@ void BoxApp::OnMouseMove( WPARAM btnState, int x, int y )
 	mLastMousePos.y = y;
 }
 
-void BoxApp::BuildGeometryBuffers()
+void ShapesApp::BuildGeometryBuffers()
 {
-	// Create vertex buffer
-	Vertex vertices[] =
+	GeometryGenerator geoGen;
+
+	GeometryGenerator::MeshData mesh;
+	geoGen.CreateGrid( 10.0f, 10.0f, 50, 50, mesh );
+	//geoGen.CreateBox( 1.0f, 1.0f, 1.0f, mesh );
+
+	std::vector<Vertex> vertices( mesh.Vertices.size() );
+	for ( size_t i = 0; i < mesh.Vertices.size(); i++ )
 	{
-		{ XMFLOAT3( -1.0f, -1.0f, -1.0f ), (const XMFLOAT4)Colors::White },
-		{ XMFLOAT3( -1.0f, +1.0f, -1.0f ), (const XMFLOAT4)Colors::Black },
-		{ XMFLOAT3( +1.0f, +1.0f, -1.0f ), (const XMFLOAT4)Colors::Red },
-		{ XMFLOAT3( +1.0f, -1.0f, -1.0f ), (const XMFLOAT4)Colors::Green },
-		{ XMFLOAT3( -1.0f, -1.0f, +1.0f ), (const XMFLOAT4)Colors::Blue },
-		{ XMFLOAT3( -1.0f, +1.0f, +1.0f ), (const XMFLOAT4)Colors::Yellow },
-		{ XMFLOAT3( +1.0f, +1.0f, +1.0f ), (const XMFLOAT4)Colors::Cyan },
-		{ XMFLOAT3( +1.0f, -1.0f, +1.0f ), (const XMFLOAT4)Colors::Magenta }
-	};
+		vertices[i].Pos = mesh.Vertices[i].Position;
+		vertices[i].Color = (const XMFLOAT4)Colors::White;
+	}
 
 	D3D11_BUFFER_DESC vbd;
 	vbd.Usage = D3D11_USAGE_IMMUTABLE;
-	vbd.ByteWidth = sizeof( Vertex ) * 8;
+	vbd.ByteWidth = sizeof( Vertex )*mesh.Vertices.size();
 	vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vbd.CPUAccessFlags = 0;
 	vbd.MiscFlags = 0;
-	vbd.StructureByteStride = 0;
 	D3D11_SUBRESOURCE_DATA vinitData;
-	vinitData.pSysMem = vertices;
-	HR( md3dDevice->CreateBuffer( &vbd, &vinitData, &mBoxVB ) );
-
-
-	// Create the index buffer
-
-	UINT indices[] = {
-		// front face
-		0, 1, 2,
-		0, 2, 3,
-
-		// back face
-		4, 6, 5,
-		4, 7, 6,
-
-		// left face
-		4, 5, 1,
-		4, 1, 0,
-
-		// right face
-		3, 2, 6,
-		3, 6, 7,
-
-		// top face
-		1, 5, 6,
-		1, 6, 2,
-
-		// bottom face
-		4, 0, 3,
-		4, 3, 7
-	};
+	vinitData.pSysMem = &vertices[0];
+	HR( md3dDevice->CreateBuffer( &vbd, &vinitData, &mVB ) );
 
 	D3D11_BUFFER_DESC ibd;
 	ibd.Usage = D3D11_USAGE_IMMUTABLE;
-	ibd.ByteWidth = sizeof( UINT ) * 36;
+	ibd.ByteWidth = sizeof( UINT )*mesh.Indices.size();
 	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	ibd.CPUAccessFlags = 0;
 	ibd.MiscFlags = 0;
-	ibd.StructureByteStride = 0;
 	D3D11_SUBRESOURCE_DATA iinitData;
-	iinitData.pSysMem = indices;
-	HR( md3dDevice->CreateBuffer( &ibd, &iinitData, &mBoxIB ) );
+	iinitData.pSysMem = &mesh.Indices[0];
+	HR( md3dDevice->CreateBuffer( &ibd, &iinitData, &mIB ) );
 }
 
-void BoxApp::BuildFX()
+void ShapesApp::BuildFX()
 {
 	DWORD shaderFlags = 0;
 #if defined( DEBUG ) || defined( _DEBUG )
@@ -304,7 +274,7 @@ void BoxApp::BuildFX()
 	HR( md3dDevice->CreateVertexShader( mVSBlob->GetBufferPointer(), mVSBlob->GetBufferSize(), NULL, &mVertexShader ) );
 }
 
-void BoxApp::BuildVertexLayout()
+void ShapesApp::BuildVertexLayout()
 {
 	// Create the vertex input layout.
 	D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
@@ -316,7 +286,7 @@ void BoxApp::BuildVertexLayout()
 	HR( md3dDevice->CreateInputLayout( vertexDesc, 2, mVSBlob->GetBufferPointer(), mVSBlob->GetBufferSize(), &mInputLayout ) );
 }
 
-void BoxApp::BuildRasterState()
+void ShapesApp::BuildRasterState()
 {
 	D3D11_RASTERIZER_DESC rs;
 	memset( &rs, 0, sizeof( rs ) );
