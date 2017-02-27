@@ -35,6 +35,8 @@ private:
 	void BuildVertexLayout();
 	void BuildRasterState();
 
+	float GetHeight( float x, float z )const;
+
 private:
 	ConstantBuffer<cbPerObject> mObjectConstantBuffer;
 	ID3D11Buffer* mVB;
@@ -49,6 +51,8 @@ private:
 	XMFLOAT4X4 mWorld;
 	XMFLOAT4X4 mView;
 	XMFLOAT4X4 mProj;
+
+	int m_meshIndexCount;
 
 	float mTheta;
 	float mPhi;
@@ -76,7 +80,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE prevInstance,
 
 ShapesApp::ShapesApp( HINSTANCE hInstance )
 	: D3DApp( hInstance ), mVB( 0 ), mIB( 0 ), mInputLayout( 0 ),
-	mTheta( 1.5f*MathHelper::Pi ), mPhi( 0.25f*MathHelper::Pi ), mRadius( 5.0f )
+	mTheta( 1.5f*MathHelper::Pi ), mPhi( 0.1f*MathHelper::Pi ), mRadius( 200.0f )
 {
 	mMainWndCaption = L"Box Demo";
 
@@ -173,7 +177,7 @@ void ShapesApp::DrawScene()
 	md3dImmediateContext->RSSetState( mRasterState );
 
 	// Draw
-	md3dImmediateContext->DrawIndexed( 36, 0, 0 );
+	md3dImmediateContext->DrawIndexed( m_meshIndexCount, 0, 0 );
 	HR( mSwapChain->Present( 0, 0 ) );
 }
 
@@ -222,13 +226,21 @@ void ShapesApp::OnMouseMove( WPARAM btnState, int x, int y )
 	mLastMousePos.y = y;
 }
 
+float ShapesApp::GetHeight( float x, float z )const
+{
+	return 0.3f*( z*sinf( 0.1f*x ) + x*cosf( 0.1f*z ) );
+}
+
 void ShapesApp::BuildGeometryBuffers()
 {
 	GeometryGenerator geoGen;
 
 	GeometryGenerator::MeshData mesh;
-	geoGen.CreateGrid( 10.0f, 10.0f, 50, 50, mesh );
+	//geoGen.CreateGrid( 160.0f, 160.0f, 50, 50, mesh );
 	//geoGen.CreateBox( 1.0f, 1.0f, 1.0f, mesh );
+	geoGen.CreateGeosphere( 100.0f, 3, mesh );
+
+	m_meshIndexCount = mesh.Indices.size();
 
 	std::vector<Vertex> vertices( mesh.Vertices.size() );
 	for ( size_t i = 0; i < mesh.Vertices.size(); i++ )
