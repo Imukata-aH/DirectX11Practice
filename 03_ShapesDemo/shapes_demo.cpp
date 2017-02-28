@@ -35,6 +35,7 @@ private:
 	void BuildFX();
 	void BuildVertexLayout();
 	void BuildRasterState();
+	void BuildWireFrameRasterState();
 
 	float GetHeight( float x, float z )const;
 
@@ -101,7 +102,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE prevInstance,
 
 ShapesApp::ShapesApp( HINSTANCE hInstance )
 	: D3DApp( hInstance ), mVB( 0 ), mIB( 0 ), mInputLayout( 0 ),
-	mTheta( 1.5f*MathHelper::Pi ), mPhi( 0.1f*MathHelper::Pi ), mRadius( 200.0f )
+	mTheta( 0.8f*MathHelper::Pi ), mPhi( 0.1f*MathHelper::Pi ), mRadius( 30.0f )
 {
 	mMainWndCaption = L"Shapes Demo";
 
@@ -148,7 +149,8 @@ bool ShapesApp::Init()
 	BuildGeometryBuffers();
 	BuildFX();
 	BuildVertexLayout();
-	BuildRasterState();
+	//BuildRasterState();
+	BuildWireFrameRasterState();
 	mObjectConstantBuffer.Initialize( md3dDevice );
 
 	return true;
@@ -206,7 +208,6 @@ void ShapesApp::DrawScene()
 	cbPerObject mPerObjectCB;
 
 	// TODO: Constant buffer の更新処理を一箇所にまとめる
-	// TODO: WireFrame の RasterState
 
 	// Draw the grid.
 	XMMATRIX world = XMLoadFloat4x4( &mGridWorld );
@@ -459,4 +460,16 @@ void ShapesApp::BuildRasterState()
 	rs.AntialiasedLineEnable = rs.DepthClipEnable = true;
 	mRasterState = NULL;
 	HR( md3dDevice->CreateRasterizerState( &rs, &mRasterState ) );
+}
+
+void ShapesApp::BuildWireFrameRasterState()
+{
+	D3D11_RASTERIZER_DESC wireframeDesc;
+	ZeroMemory( &wireframeDesc, sizeof( D3D11_RASTERIZER_DESC ) );
+	wireframeDesc.FillMode = D3D11_FILL_WIREFRAME;
+	wireframeDesc.CullMode = D3D11_CULL_BACK;
+	wireframeDesc.FrontCounterClockwise = false;
+	wireframeDesc.DepthClipEnable = true;
+	mRasterState = NULL;
+	HR( md3dDevice->CreateRasterizerState( &wireframeDesc, &mRasterState ) );
 }
