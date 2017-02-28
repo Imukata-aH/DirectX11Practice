@@ -206,7 +206,7 @@ void ShapesApp::DrawScene()
 	cbPerObject mPerObjectCB;
 
 	// TODO: Constant buffer の更新処理を一箇所にまとめる
-	// TODO: カメラの初期位置からズームしたときの挙動がおかしいのを直す
+	// TODO: WireFrame の RasterState
 
 	// Draw the grid.
 	XMMATRIX world = XMLoadFloat4x4( &mGridWorld );
@@ -306,14 +306,14 @@ void ShapesApp::OnMouseMove( WPARAM btnState, int x, int y )
 	else if ( ( btnState & MK_RBUTTON ) != 0 )
 	{
 		// Make each pixel correspond to 0.005 unit in the scene.
-		float dx = 0.005f*static_cast<float>( x - mLastMousePos.x );
-		float dy = 0.005f*static_cast<float>( y - mLastMousePos.y );
+		float dx = 0.1f*static_cast<float>( x - mLastMousePos.x );
+		float dy = 0.1f*static_cast<float>( y - mLastMousePos.y );
 
 		// Update the camera radius based on input.
 		mRadius += dx - dy;
 
 		// Restrict the radius.
-		mRadius = MathHelper::Clamp( mRadius, 3.0f, 15.0f );
+		mRadius = MathHelper::Clamp( mRadius, 3.0f, 250.0f );
 	}
 
 	mLastMousePos.x = x;
