@@ -37,8 +37,6 @@ private:
 
 private:
 	ConstantBuffer<cbPerObject> mObjectConstantBuffer;
-	ID3D11Buffer* mVB;
-	ID3D11Buffer* mIB;
 	ID3DBlob* mPSBlob;
 	ID3DBlob* mVSBlob;
 	ID3D11PixelShader* mPixelShader;
@@ -76,7 +74,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE prevInstance,
 
 
 ShapesApp::ShapesApp( HINSTANCE hInstance )
-	: D3DApp( hInstance ), mVB( 0 ), mIB( 0 ), mInputLayout( 0 ),
+	: D3DApp( hInstance ), mInputLayout( 0 ),
 	mTheta( 0.8f*MathHelper::Pi ), mPhi( 0.1f*MathHelper::Pi ), mRadius( 30.0f )
 {
 	mMainWndCaption = L"Shapes Demo";
@@ -89,11 +87,9 @@ ShapesApp::ShapesApp( HINSTANCE hInstance )
 
 ShapesApp::~ShapesApp()
 {
-	delete boxModel;
+	boxModel->Release();
 	boxModel = 0;
 
-	ReleaseCOM( mVB );
-	ReleaseCOM( mIB );
 	ReleaseCOM( mInputLayout );
 	ReleaseCOM( mPSBlob );
 	ReleaseCOM( mVSBlob );
@@ -107,8 +103,8 @@ bool ShapesApp::Init()
 	BuildGeometryBuffers();
 	BuildFX();
 	BuildVertexLayout();
-	//BuildRasterState();
-	BuildWireFrameRasterState();
+	BuildRasterState();
+	//BuildWireFrameRasterState();
 	mObjectConstantBuffer.Initialize( md3dDevice );
 
 	return true;
@@ -220,7 +216,7 @@ void ShapesApp::BuildGeometryBuffers()
 	GeometryGenerator::MeshData boxMesh;
 	geoGen.CreateBox( 1.0f, 1.0f, 1.0f, boxMesh );
 
-	// とりあえずコピーしてるが、Vertex の定義をどこかにおいてそれを全体で使うか、頂点属性の使い分けをできるようにしたい
+	// とりあえず頂点コピーしてるが、Vertex の定義をどこかにおいてそれを全体で使うか、頂点属性の使い分けをできるようにしたい
 	XMFLOAT4 green( 0.0f, 0.8f, 0.0f, 1.0f );
 	size_t count = boxMesh.Vertices.size();
 	std::vector<Vertex> vertices(count);
@@ -230,12 +226,12 @@ void ShapesApp::BuildGeometryBuffers()
 		vertices[i].Color = green;
 	}
 
-	Batch* boxBatch = new Batch( &vertices, &boxMesh.Indices );
+	Batch* boxBatch = new Batch( &md3dDevice, &md3dImmediateContext, &vertices, &boxMesh.Indices );
 	boxModel = new Model(boxBatch);
 
-	boxModel->SetPosition( XMFLOAT3(0.0f, 0.5f, 0.0f) );
-	boxModel->SetScale( XMFLOAT3( 2.0f, 1.0f, 2.0f) );
-	boxModel->SetRotation( XMFLOAT3( 0.0f, 45.0f, 0.0f) );
+	//boxModel->SetPosition( XMFLOAT3(0.0f, 0.5f, 0.0f) );
+	//boxModel->SetScale( XMFLOAT3( 2.0f, 1.0f, 2.0f) );
+	//boxModel->SetRotation( XMFLOAT3( 0.0f, 45.0f, 0.0f) );
 }
 
 void ShapesApp::BuildFX()

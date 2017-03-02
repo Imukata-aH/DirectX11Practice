@@ -153,13 +153,25 @@
     <ClCompile Include="..\Common\GeometryGenerator.cpp" />
     <ClCompile Include="..\Common\LightHelper.cpp" />
     <ClCompile Include="..\Common\MathHelper.cpp" />
+    <ClCompile Include="..\Common\Model.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
     <ClCompile Include="..\Common\ShaderHelper.cpp" />
+    <ClCompile Include="..\Common\Batch.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
     <ClCompile Include="model_demo.cpp">
       <SubType>
       </SubType>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Common\Batch.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="..\Common\Camera.h" />
     <ClInclude Include="..\Common\ConstantBuffer.h" />
     <ClInclude Include="..\Common\d3dApp.h" />
@@ -169,6 +181,10 @@
     <ClInclude Include="..\Common\GeometryGenerator.h" />
     <ClInclude Include="..\Common\LightHelper.h" />
     <ClInclude Include="..\Common\MathHelper.h" />
+    <ClInclude Include="..\Common\Model.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="..\Common\ShaderHelper.h" />
     <ClInclude Include="cbPerObject.h" />
   </ItemGroup>
