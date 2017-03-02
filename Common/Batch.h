@@ -1,8 +1,9 @@
 ﻿#pragma once
 
-#include <d3dUtil.h>
 #include <vector>
 #include <minwindef.h>
+
+#include "d3dUtil.h"
 
 struct Vertex
 {
@@ -16,7 +17,10 @@ public:
 	Batch(std::vector<Vertex>* vertices, std::vector<UINT>* indices);
 	~Batch();
 
+	void Release();
+
 private:
-	std::vector<Vertex>* vertices;
-	std::vector<UINT>* indices;
+	std::vector<Vertex>* m_vertices;
+	std::vector<UINT>* m_indices;
+
 };
