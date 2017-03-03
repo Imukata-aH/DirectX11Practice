@@ -47,7 +47,8 @@ private:
 	XMFLOAT4X4 mView;
 	XMFLOAT4X4 mProj;
 
-	Model* boxModel;
+	Model* m_boxModel;
+	Model* m_gridModel;
 
 	float mTheta;
 	float mPhi;
@@ -85,8 +86,11 @@ ShapesApp::ShapesApp( HINSTANCE hInstance )
 
 ShapesApp::~ShapesApp()
 {
-	boxModel->Release();
-	boxModel = 0;
+	m_boxModel->Release();
+	m_boxModel = 0;
+
+	m_gridModel->Release();
+	m_gridModel = 0;
 
 	ReleaseCOM( mInputLayout );
 	ReleaseCOM( mPSBlob );
@@ -152,7 +156,8 @@ void ShapesApp::DrawScene()
 	XMMATRIX proj = XMLoadFloat4x4( &mProj );
 	XMMATRIX viewProj = view*proj;
 
-	boxModel->Draw( viewProj, &mObjectConstantBuffer );
+	m_boxModel->Draw( viewProj, &mObjectConstantBuffer );
+	m_gridModel->Draw( viewProj, &mObjectConstantBuffer );
 
 	HR( mSwapChain->Present( 0, 0 ) );
 }
@@ -209,6 +214,8 @@ float ShapesApp::GetHeight( float x, float z )const
 
 void ShapesApp::BuildGeometryBuffers()
 {
+	// Set up Box
+
 	GeometryGenerator geoGen;
 
 	GeometryGenerator::MeshData boxMesh;
@@ -225,10 +232,29 @@ void ShapesApp::BuildGeometryBuffers()
 	}
 
 	Batch* boxBatch = new Batch( &md3dDevice, &md3dImmediateContext, &vertices, &boxMesh.Indices );
-	boxModel = new Model(boxBatch);
+	m_boxModel = new Model(boxBatch);
 
-	boxModel->SetTransition( XMFLOAT3(0.0f, 0.5f, 0.0f) );
-	boxModel->SetScale( XMFLOAT3( 2.0f, 1.0f, 2.0f) );
+	m_boxModel->SetTransition( XMFLOAT3(0.0f, 0.5f, 0.0f) );
+	m_boxModel->SetScale( XMFLOAT3( 2.0f, 1.0f, 2.0f) );
+
+
+	// Set up Grid
+
+	GeometryGenerator::MeshData gridMesh;
+	geoGen.CreateGrid( 20.0f, 30.0f, 60, 40, gridMesh );
+
+	count = gridMesh.Vertices.size();
+	vertices.resize( count );
+	for ( size_t i = 0; i < count; i++ )
+	{
+		vertices[i].Position = gridMesh.Vertices[i].Position;
+		vertices[i].Color = green;
+	}
+
+	Batch* gridBatch = new Batch( &md3dDevice, &md3dImmediateContext, &vertices, &gridMesh.Indices );
+	m_gridModel = new Model( gridBatch );
+
+
 }
 
 void ShapesApp::BuildFX()
