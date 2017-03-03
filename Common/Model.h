@@ -1,7 +1,9 @@
 ﻿#pragma once
 
 #include "d3dUtil.h"
+#include "ConstantBuffer.h"
 class Batch;
+struct ConstantsPerObject;
 
 class Model
 {
@@ -11,7 +13,7 @@ public:
 
 	void Release();
 
-	void Draw( const XMMATRIX& viewProjectionMatrix );
+	void Draw( const XMMATRIX& viewProjectionMatrix, ConstantBuffer<ConstantsPerObject>* constantBuffer );
 	void SetPosition( const XMFLOAT3& position );
 	void SetScale( const XMFLOAT3& scale );
 	void SetRotation( const XMFLOAT3& angle );

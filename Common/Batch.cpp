@@ -9,8 +9,6 @@ Batch::Batch( ID3D11Device** device, ID3D11DeviceContext** deviceContext, std::v
 	m_ib( 0),
 	m_indexCount(0)
 {
-	m_constantBuffer.Initialize( *m_device );
-
 	// 頂点バッファの構築
 
 	D3D11_BUFFER_DESC vbd;
@@ -55,17 +53,17 @@ void Batch::Release()
 	ReleaseCOM( m_ib );
 }
 
-void Batch::Draw( const XMMATRIX& wvmMatrix )
+void Batch::Draw( const XMMATRIX& wvmMatrix, ConstantBuffer<ConstantsPerObject>* constantBuffer )
 {
 	//// Constant Buffer の更新
 
 	ConstantsPerObject constants;
 
 	XMStoreFloat4x4( &constants.m_WorldViewProj, wvmMatrix );
-	m_constantBuffer.Data = constants;
-	m_constantBuffer.ApplyChanges( *m_deviceContext );
+	constantBuffer->Data = constants;
+	constantBuffer->ApplyChanges( *m_deviceContext );
 
-	auto buffer = m_constantBuffer.Buffer();
+	auto buffer = constantBuffer->Buffer();
 	(*m_deviceContext)->VSSetConstantBuffers( 0, 1, &buffer );
 
 	// 頂点バッファのセット

@@ -36,7 +36,7 @@ private:
 	float GetHeight( float x, float z )const;
 
 private:
-	ConstantBuffer<cbPerObject> mObjectConstantBuffer;
+	ConstantBuffer<ConstantsPerObject> mObjectConstantBuffer;
 	ID3DBlob* mPSBlob;
 	ID3DBlob* mVSBlob;
 	ID3D11PixelShader* mPixelShader;
@@ -75,14 +75,12 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE prevInstance,
 
 ShapesApp::ShapesApp( HINSTANCE hInstance )
 	: D3DApp( hInstance ), mInputLayout( 0 ),
-	mTheta( 0.8f*MathHelper::Pi ), mPhi( 0.1f*MathHelper::Pi ), mRadius( 30.0f )
+	mTheta( 0.0f/*0.8f*MathHelper::Pi*/ ), mPhi( 0.0f/*0.1f*MathHelper::Pi*/ ), mRadius( 10.0f )
 {
 	mMainWndCaption = L"Shapes Demo";
 
 	mLastMousePos.x = 0;
 	mLastMousePos.y = 0;
-
-	
 }
 
 ShapesApp::~ShapesApp()
@@ -154,7 +152,7 @@ void ShapesApp::DrawScene()
 	XMMATRIX proj = XMLoadFloat4x4( &mProj );
 	XMMATRIX viewProj = view*proj;
 
-	boxModel->Draw( viewProj );
+	boxModel->Draw( viewProj, &mObjectConstantBuffer );
 
 	HR( mSwapChain->Present( 0, 0 ) );
 }
@@ -229,7 +227,7 @@ void ShapesApp::BuildGeometryBuffers()
 	Batch* boxBatch = new Batch( &md3dDevice, &md3dImmediateContext, &vertices, &boxMesh.Indices );
 	boxModel = new Model(boxBatch);
 
-	//boxModel->SetPosition( XMFLOAT3(0.0f, 0.5f, 0.0f) );
+	//boxModel->SetPosition( XMFLOAT3(3.0f, 0.0f, 0.0f) );
 	//boxModel->SetScale( XMFLOAT3( 2.0f, 1.0f, 2.0f) );
 	//boxModel->SetRotation( XMFLOAT3( 0.0f, 45.0f, 0.0f) );
 }

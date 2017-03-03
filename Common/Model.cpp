@@ -19,11 +19,11 @@ void Model::Release()
 	m_batch->Release();
 }
 
-void Model::Draw( const XMMATRIX& viewProjectionMatrix )
+void Model::Draw( const XMMATRIX& viewProjectionMatrix, ConstantBuffer<ConstantsPerObject>* constantBuffer )
 {
 	// World matrix の構築
 
-	/*XMVECTOR scaleVec = XMLoadFloat3( &m_scale );
+	XMVECTOR scaleVec = XMLoadFloat3( &m_scale );
 	XMMATRIX scale = XMMatrixScalingFromVector( scaleVec );
 
 	XMVECTOR rotationVec = XMLoadFloat3( &m_rotation );
@@ -32,14 +32,13 @@ void Model::Draw( const XMMATRIX& viewProjectionMatrix )
 	XMVECTOR transitionVec = XMLoadFloat3( &m_position );
 	XMMATRIX transition = XMMatrixTranslationFromVector( transitionVec );
 
-	XMMATRIX world = scale * transition * rotation;*/
-	XMMATRIX world = XMMatrixIdentity();
+	XMMATRIX world = scale * transition * rotation;
 
 	// Transpose is needed from DirectxMath's spec.
 	XMMATRIX worldViewProj = XMMatrixTranspose( world * viewProjectionMatrix );
 
 	// 描画
-	m_batch->Draw( worldViewProj );
+	m_batch->Draw( worldViewProj, constantBuffer );
 }
 
 void Model::SetPosition( const XMFLOAT3& position )
