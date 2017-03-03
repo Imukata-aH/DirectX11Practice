@@ -49,6 +49,7 @@ private:
 
 	Model* m_boxModel;
 	Model* m_gridModel;
+	Model* m_cylinderModels[10];
 
 	float mTheta;
 	float mPhi;
@@ -87,14 +88,25 @@ ShapesApp::ShapesApp( HINSTANCE hInstance )
 ShapesApp::~ShapesApp()
 {
 	m_boxModel->Release();
+	delete m_boxModel;
 	m_boxModel = 0;
 
 	m_gridModel->Release();
+	delete m_gridModel;
 	m_gridModel = 0;
+
+	for ( int i = 0; i < 10; i++ )
+	{
+		m_cylinderModels[i]->Release();
+		delete m_cylinderModels[i];
+		m_cylinderModels[i] = 0;
+	}
 
 	ReleaseCOM( mInputLayout );
 	ReleaseCOM( mPSBlob );
 	ReleaseCOM( mVSBlob );
+	ReleaseCOM( md3dImmediateContext );
+	ReleaseCOM( md3dDevice );
 }
 
 bool ShapesApp::Init()
@@ -158,6 +170,11 @@ void ShapesApp::DrawScene()
 
 	m_boxModel->Draw( viewProj, &mObjectConstantBuffer );
 	m_gridModel->Draw( viewProj, &mObjectConstantBuffer );
+
+	for ( int i = 0; i < 10; i++ )
+	{
+		m_cylinderModels[i]->Draw( viewProj, &mObjectConstantBuffer );
+	}
 
 	HR( mSwapChain->Present( 0, 0 ) );
 }
@@ -255,6 +272,36 @@ void ShapesApp::BuildGeometryBuffers()
 	m_gridModel = new Model( gridBatch );
 
 
+	// Set up Cylinder
+
+	GeometryGenerator::MeshData cylinderMesh;
+	geoGen.CreateCylinder( 0.5f, 0.3f, 3.0f, 20, 20, cylinderMesh );
+
+	count = cylinderMesh.Vertices.size();
+	vertices.resize( count );
+	for ( size_t i = 0; i < count; i++ )
+	{
+		vertices[i].Position = cylinderMesh.Vertices[i].Position;
+		vertices[i].Color = green;
+	}
+
+	Batch* cylinderBatch = new Batch( &md3dDevice, &md3dImmediateContext, &vertices, &cylinderMesh.Indices );
+	for ( int i = 0; i < 10; i++ )
+	{
+		Model* cylinderModel = new Model( cylinderBatch );
+
+		if ( i % 2 == 0 )
+		{
+			cylinderModel->SetTransition( XMFLOAT3( -5.0f, 1.5f, -10.0f + i*2.5f ));
+		}
+		else
+		{
+			cylinderModel->SetTransition( XMFLOAT3( +5.0f, 1.5f, -10.0f + i*2.5f ) );
+		}
+
+		m_cylinderModels[i] = cylinderModel;
+
+	}
 }
 
 void ShapesApp::BuildFX()
