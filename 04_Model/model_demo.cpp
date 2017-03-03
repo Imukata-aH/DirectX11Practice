@@ -227,7 +227,7 @@ void ShapesApp::BuildGeometryBuffers()
 	Batch* boxBatch = new Batch( &md3dDevice, &md3dImmediateContext, &vertices, &boxMesh.Indices );
 	boxModel = new Model(boxBatch);
 
-	boxModel->SetPosition( XMFLOAT3(0.0f, 0.5f, 0.0f) );
+	boxModel->SetTransition( XMFLOAT3(0.0f, 0.5f, 0.0f) );
 	boxModel->SetScale( XMFLOAT3( 2.0f, 1.0f, 2.0f) );
 }
 

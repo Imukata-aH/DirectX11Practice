@@ -3,7 +3,7 @@
 
 Model::Model( Batch* batch ) :
 	m_batch( batch ),
-	m_position( XMFLOAT3( 0.0f, 0.0f, 0.0f ) ),
+	m_transition( XMFLOAT3( 0.0f, 0.0f, 0.0f ) ),
 	m_scale( XMFLOAT3( 1.0f, 1.0f, 1.0f ) ),
 	m_rotation( XMFLOAT3( 0.0f, 0.0f, 0.0f ) )
 {
@@ -29,7 +29,7 @@ void Model::Draw( const XMMATRIX& viewProjectionMatrix, ConstantBuffer<Constants
 	XMVECTOR rotationVec = XMLoadFloat3( &m_rotation );
 	XMMATRIX rotation = XMMatrixRotationRollPitchYawFromVector( rotationVec );
 
-	XMVECTOR transitionVec = XMLoadFloat3( &m_position );
+	XMVECTOR transitionVec = XMLoadFloat3( &m_transition );
 	XMMATRIX transition = XMMatrixTranslationFromVector( transitionVec );
 
 	XMMATRIX world = scale * transition * rotation;
@@ -41,9 +41,9 @@ void Model::Draw( const XMMATRIX& viewProjectionMatrix, ConstantBuffer<Constants
 	m_batch->Draw( worldViewProj, constantBuffer );
 }
 
-void Model::SetPosition( const XMFLOAT3& position )
+void Model::SetTransition( const XMFLOAT3& transition )
 {
-	m_position = position;
+	m_transition = transition;
 }
 
 void Model::SetScale( const XMFLOAT3& scale )
