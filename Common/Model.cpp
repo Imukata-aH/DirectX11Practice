@@ -23,7 +23,7 @@ void Model::Draw( const XMMATRIX& viewProjectionMatrix )
 {
 	// World matrix の構築
 
-	XMVECTOR scaleVec = XMLoadFloat3( &m_scale );
+	/*XMVECTOR scaleVec = XMLoadFloat3( &m_scale );
 	XMMATRIX scale = XMMatrixScalingFromVector( scaleVec );
 
 	XMVECTOR rotationVec = XMLoadFloat3( &m_rotation );
@@ -32,10 +32,11 @@ void Model::Draw( const XMMATRIX& viewProjectionMatrix )
 	XMVECTOR transitionVec = XMLoadFloat3( &m_position );
 	XMMATRIX transition = XMMatrixTranslationFromVector( transitionVec );
 
-	XMMATRIX world = scale * transition * rotation;
-	//world = XMMatrixIdentity();
+	XMMATRIX world = scale * transition * rotation;*/
+	XMMATRIX world = XMMatrixIdentity();
 
-	XMMATRIX worldViewProj = world * viewProjectionMatrix;
+	// Transpose is needed from DirectxMath's spec.
+	XMMATRIX worldViewProj = XMMatrixTranspose( world * viewProjectionMatrix );
 
 	// 描画
 	m_batch->Draw( worldViewProj );

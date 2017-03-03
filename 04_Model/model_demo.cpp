@@ -103,8 +103,8 @@ bool ShapesApp::Init()
 	BuildGeometryBuffers();
 	BuildFX();
 	BuildVertexLayout();
-	BuildRasterState();
-	//BuildWireFrameRasterState();
+	//BuildRasterState();
+	BuildWireFrameRasterState();
 	mObjectConstantBuffer.Initialize( md3dDevice );
 
 	return true;
@@ -147,14 +147,14 @@ void ShapesApp::DrawScene()
 	md3dImmediateContext->PSSetShader( mPixelShader, NULL, 0 );
 	md3dImmediateContext->VSSetShader( mVertexShader, NULL, 0 );
 
+	// Set raster state
+	md3dImmediateContext->RSSetState( mRasterState );
+
 	XMMATRIX view = XMLoadFloat4x4( &mView );
 	XMMATRIX proj = XMLoadFloat4x4( &mProj );
 	XMMATRIX viewProj = view*proj;
 
 	boxModel->Draw( viewProj );
-
-	// Set raster state
-	md3dImmediateContext->RSSetState( mRasterState );
 
 	HR( mSwapChain->Present( 0, 0 ) );
 }
@@ -278,7 +278,7 @@ void ShapesApp::BuildWireFrameRasterState()
 	D3D11_RASTERIZER_DESC wireframeDesc;
 	ZeroMemory( &wireframeDesc, sizeof( D3D11_RASTERIZER_DESC ) );
 	wireframeDesc.FillMode = D3D11_FILL_WIREFRAME;
-	wireframeDesc.CullMode = D3D11_CULL_BACK;
+	wireframeDesc.CullMode = D3D11_CULL_NONE;
 	wireframeDesc.FrontCounterClockwise = false;
 	wireframeDesc.DepthClipEnable = true;
 	mRasterState = NULL;

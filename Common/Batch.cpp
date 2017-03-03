@@ -1,6 +1,8 @@
 ﻿#include "Batch.h"
+#include <DirectXColors.h>
+using namespace DirectX;
 
-Batch::Batch( ID3D11Device** device, ID3D11DeviceContext** deviceContext, std::vector<Vertex>* vertices, std::vector<UINT>* indices ) :
+Batch::Batch( ID3D11Device** device, ID3D11DeviceContext** deviceContext, std::vector<Vertex>* _vertices, std::vector<UINT>* _indices ) :
 	m_device(device),
 	m_deviceContext(deviceContext),
 	m_vb( 0 ),
@@ -14,31 +16,31 @@ Batch::Batch( ID3D11Device** device, ID3D11DeviceContext** deviceContext, std::v
 	D3D11_BUFFER_DESC vbd;
 
 	vbd.Usage = D3D11_USAGE_IMMUTABLE;
-	vbd.ByteWidth = sizeof( Vertex ) * vertices->size();
+	vbd.ByteWidth = sizeof( Vertex ) * _vertices->size();
 	vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vbd.CPUAccessFlags = 0;
 	vbd.MiscFlags = 0;
 
 	D3D11_SUBRESOURCE_DATA vinitData;
-	vinitData.pSysMem = &( ( *vertices )[0] );
+	vinitData.pSysMem = &( ( *_vertices )[0] );
 
 	HR( ( *device )->CreateBuffer( &vbd, &vinitData, &m_vb ) );
 
 
 	// インデックスバッファの構築
 
-	m_indexCount = indices->size();
+	m_indexCount = _indices->size();
 
 	D3D11_BUFFER_DESC ibd;
 
 	ibd.Usage = D3D11_USAGE_IMMUTABLE;
-	ibd.ByteWidth = sizeof( UINT ) * indices->size();
+	ibd.ByteWidth = sizeof( UINT ) * _indices->size();
 	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	ibd.CPUAccessFlags = 0;
 	ibd.MiscFlags = 0;
 
 	D3D11_SUBRESOURCE_DATA iinitData;
-	iinitData.pSysMem = &( ( *indices )[0] );
+	iinitData.pSysMem = &( ( *_indices )[0] );
 
 	HR( ( *device )->CreateBuffer( &ibd, &iinitData, &m_ib ) );
 }
@@ -55,7 +57,7 @@ void Batch::Release()
 
 void Batch::Draw( const XMMATRIX& wvmMatrix )
 {
-	// Constant Buffer の更新
+	//// Constant Buffer の更新
 
 	ConstantsPerObject constants;
 
