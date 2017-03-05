@@ -81,7 +81,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE prevInstance,
 
 ShapesApp::ShapesApp( HINSTANCE hInstance )
 	: D3DApp( hInstance ), mInputLayout( 0 ),
-	mTheta( 0.8f*MathHelper::Pi ), mPhi( 0.1f*MathHelper::Pi ), mRadius( 10.0f )
+	mTheta( 0.1f*MathHelper::Pi ), mPhi( 0.5f*MathHelper::Pi ), mRadius( 10.0f )
 {
 	mMainWndCaption = L"Shapes Demo";
 
@@ -296,7 +296,7 @@ void ShapesApp::BuildWireFrameRasterState()
 
 bool ShapesApp::ImportMeshFromFile( const std::string & filename, int* vertexCount )
 {
-	LPWSTR msg = 0;
+	wchar_t msg[256];
 
 	Assimp::Importer importer;
 
@@ -307,7 +307,7 @@ bool ShapesApp::ImportMeshFromFile( const std::string & filename, int* vertexCou
 		return false;
 	}
 
-	swprintf_s( msg, 256, L"  %i meshes", scene->mNumMeshes );
+	swprintf_s( msg, 256, L"  %i meshes\n", scene->mNumMeshes );
 	OutputDebugString( msg );
 
 	const aiMesh* mesh = scene->mMeshes[0];
