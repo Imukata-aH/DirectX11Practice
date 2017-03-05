@@ -39,7 +39,7 @@ private:
 	void BuildRasterState();
 	void BuildWireFrameRasterState();
 
-	bool ImportMeshFromFile( const std::string& filename, int* vertexCount );
+	bool ImportMeshFromFile( const std::string & filename, std::vector<Vertex>** vertices, std::vector<UINT>** indices );
 
 private:
 	ConstantBuffer<ConstantsPerObject> mObjectConstantBuffer;
@@ -213,34 +213,42 @@ void ShapesApp::OnMouseMove( WPARAM btnState, int x, int y )
 
 void ShapesApp::BuildGeometryBuffers()
 {
-	int vertexCount;
-	bool result = ImportMeshFromFile( MESH_FILE, &vertexCount);
+	//// Set up Box
+
+	//GeometryGenerator geoGen;
+
+	//GeometryGenerator::MeshData boxMesh;
+	//geoGen.CreateBox( 1.0f, 1.0f, 1.0f, boxMesh );
+
+	//// とりあえず頂点コピーしてるが、Vertex の定義をどこかにおいてそれを全体で使うか、頂点属性の使い分けをできるようにしたい
+	//XMFLOAT4 green( 0.0f, 0.8f, 0.0f, 1.0f );
+	//size_t count = boxMesh.Vertices.size();
+	//std::vector<Vertex> vertices( count );
+	//for ( size_t i = 0; i < count; i++ )
+	//{
+	//	vertices[i].Position = boxMesh.Vertices[i].Position;
+	//	vertices[i].Color = green;
+	//}
+
+	std::vector<Vertex>* vertices;
+	std::vector<UINT>* indices;
+	bool result = ImportMeshFromFile( MESH_FILE, &vertices, &indices );
 	if ( !result )
 	{
 		OutputDebugString( L"Reading mesh file failed.\n" );
-	}
-	// Set up Box
+	}	
 
-	GeometryGenerator geoGen;
+	Batch* importexMeshBatch = new Batch( &md3dDevice, &md3dImmediateContext, vertices, indices );
+	m_importedMeshModel = new Model( importexMeshBatch );
 
-	GeometryGenerator::MeshData boxMesh;
-	geoGen.CreateBox( 1.0f, 1.0f, 1.0f, boxMesh );
+	delete vertices;
+	vertices = 0;
 
-	// とりあえず頂点コピーしてるが、Vertex の定義をどこかにおいてそれを全体で使うか、頂点属性の使い分けをできるようにしたい
-	XMFLOAT4 green( 0.0f, 0.8f, 0.0f, 1.0f );
-	size_t count = boxMesh.Vertices.size();
-	std::vector<Vertex> vertices( count );
-	for ( size_t i = 0; i < count; i++ )
-	{
-		vertices[i].Position = boxMesh.Vertices[i].Position;
-		vertices[i].Color = green;
-	}
+	delete indices;
+	indices = 0;
 
-	Batch* boxBatch = new Batch( &md3dDevice, &md3dImmediateContext, &vertices, &boxMesh.Indices );
-	m_importedMeshModel = new Model( boxBatch );
-
-	m_importedMeshModel->SetTransition( XMFLOAT3( 0.0f, 0.5f, 0.0f ) );
-	m_importedMeshModel->SetScale( XMFLOAT3( 2.0f, 1.0f, 2.0f ) );
+	//m_importedMeshModel->SetTransition( XMFLOAT3( 0.0f, 0.5f, 0.0f ) );
+	//m_importedMeshModel->SetScale( XMFLOAT3( 2.0f, 1.0f, 2.0f ) );
 }
 
 void ShapesApp::BuildFX()
@@ -294,7 +302,7 @@ void ShapesApp::BuildWireFrameRasterState()
 	HR( md3dDevice->CreateRasterizerState( &wireframeDesc, &mRasterState ) );
 }
 
-bool ShapesApp::ImportMeshFromFile( const std::string & filename, int* vertexCount )
+bool ShapesApp::ImportMeshFromFile( const std::string & filename, std::vector<Vertex>** vertices, std::vector<UINT>** indices )
 {
 	wchar_t msg[256];
 
@@ -314,7 +322,29 @@ bool ShapesApp::ImportMeshFromFile( const std::string & filename, int* vertexCou
 	swprintf_s( msg, 256, L"  %i vertices in mesh[0]\n", mesh->mNumVertices );
 	OutputDebugString( msg );
 
-	*vertexCount = mesh->mNumVertices;
+	if ( mesh->HasPositions() )
+	{
+		*vertices = new std::vector<Vertex>( static_cast<size_t>( mesh->mNumVertices ) );
+		XMFLOAT4 green( 0.0f, 0.8f, 0.0f, 1.0f );
+		for ( int i = 0; i < mesh->mNumVertices; i++ )
+		{
+			const aiVector3D* pos = &( mesh->mVertices[i] );
+			( **vertices )[i].Position = XMFLOAT3( pos->x, pos->y, pos->z );
+			( **vertices )[i].Color = green;		//FIXME: for test
+		}
+	}
 
+	*indices = new std::vector<UINT>( mesh->mNumFaces * 3 );
+	for ( int i = 0; i < mesh->mNumFaces; i++ )
+	{
+		const aiFace& face = mesh->mFaces[i];
+		assert( face.mNumIndices == 3 );
+		( **indices )[(i * 3) + 0] = face.mIndices[0];
+		( **indices )[(i * 3) + 1] = face.mIndices[1];
+		( **indices )[(i * 3) + 2] = face.mIndices[2];
+	}
+
+	swprintf_s( msg, 256, L"Complete reading mesh %s\n", filename );
+	
 	return true;
 }
