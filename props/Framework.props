@@ -7,13 +7,15 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <PostBuildEvent>
-      <Command>copy "$(WindowsSdkDir)redist\d3d\x64\D3DCompile*.DLL" "$(TargetDir)"</Command>
+      <Command>copy "$(WindowsSdkDir)redist\d3d\x64\D3DCompile*.DLL" "$(TargetDir)"
+copy "$(SolutionDir)Common\assimp\bin\assimp-vc140-mt.dll" "$(TargetDir)"</Command>
     </PostBuildEvent>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)Common;$(ProjectDir)include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Common;$(ProjectDir)include;$(SolutionDir)Common\assimp\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;dxguid.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc140-mt.lib;d3d11.lib;d3dcompiler.lib;dxguid.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Common\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup />

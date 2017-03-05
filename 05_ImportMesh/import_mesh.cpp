@@ -1,4 +1,6 @@
-﻿#include "d3dApp.h"
+﻿#include <string>
+
+#include "d3dApp.h"
 #include "d3dUtil.h"
 #include "MathHelper.h"
 #include "DirectXColors.h"
@@ -7,8 +9,13 @@
 #include "GeometryGenerator.h"
 #include "Batch.h"
 #include "Model.h"
+#include "Importer.hpp"
+#include "scene.h"
+#include "postprocess.h"
 using namespace DirectX;
 using namespace DirectX::PackedVector;
+
+#define MESH_FILE "suzanne.obj"
 
 class ShapesApp : public D3DApp
 {
@@ -32,7 +39,7 @@ private:
 	void BuildRasterState();
 	void BuildWireFrameRasterState();
 
-	float GetHeight( float x, float z )const;
+	bool ImportMeshFromFile( const std::string& filename, int* vertexCount );
 
 private:
 	ConstantBuffer<ConstantsPerObject> mObjectConstantBuffer;
@@ -46,9 +53,7 @@ private:
 	XMFLOAT4X4 mView;
 	XMFLOAT4X4 mProj;
 
-	Model* m_boxModel;
-	Model* m_gridModel;
-	Model* m_cylinderModels[10];
+	Model* m_importedMeshModel;
 
 	float mTheta;
 	float mPhi;
@@ -86,20 +91,9 @@ ShapesApp::ShapesApp( HINSTANCE hInstance )
 
 ShapesApp::~ShapesApp()
 {
-	m_boxModel->Release();
-	delete m_boxModel;
-	m_boxModel = 0;
-
-	m_gridModel->Release();
-	delete m_gridModel;
-	m_gridModel = 0;
-
-	for ( int i = 0; i < 10; i++ )
-	{
-		m_cylinderModels[i]->Release();
-		delete m_cylinderModels[i];
-		m_cylinderModels[i] = 0;
-	}
+	m_importedMeshModel->Release();
+	delete m_importedMeshModel;
+	m_importedMeshModel = 0;
 
 	ReleaseCOM( mInputLayout );
 	ReleaseCOM( mPSBlob );
@@ -167,13 +161,7 @@ void ShapesApp::DrawScene()
 	XMMATRIX proj = XMLoadFloat4x4( &mProj );
 	XMMATRIX viewProj = view*proj;
 
-	m_boxModel->Draw( viewProj, &mObjectConstantBuffer );
-	m_gridModel->Draw( viewProj, &mObjectConstantBuffer );
-
-	for ( int i = 0; i < 10; i++ )
-	{
-		m_cylinderModels[i]->Draw( viewProj, &mObjectConstantBuffer );
-	}
+	m_importedMeshModel->Draw( viewProj, &mObjectConstantBuffer );
 
 	HR( mSwapChain->Present( 0, 0 ) );
 }
@@ -223,13 +211,14 @@ void ShapesApp::OnMouseMove( WPARAM btnState, int x, int y )
 	mLastMousePos.y = y;
 }
 
-float ShapesApp::GetHeight( float x, float z )const
-{
-	return 0.3f*( z*sinf( 0.1f*x ) + x*cosf( 0.1f*z ) );
-}
-
 void ShapesApp::BuildGeometryBuffers()
 {
+	int vertexCount;
+	bool result = ImportMeshFromFile( MESH_FILE, &vertexCount);
+	if ( !result )
+	{
+		OutputDebugString( L"Reading mesh file failed.\n" );
+	}
 	// Set up Box
 
 	GeometryGenerator geoGen;
@@ -248,59 +237,10 @@ void ShapesApp::BuildGeometryBuffers()
 	}
 
 	Batch* boxBatch = new Batch( &md3dDevice, &md3dImmediateContext, &vertices, &boxMesh.Indices );
-	m_boxModel = new Model( boxBatch );
+	m_importedMeshModel = new Model( boxBatch );
 
-	m_boxModel->SetTransition( XMFLOAT3( 0.0f, 0.5f, 0.0f ) );
-	m_boxModel->SetScale( XMFLOAT3( 2.0f, 1.0f, 2.0f ) );
-
-
-	// Set up Grid
-
-	GeometryGenerator::MeshData gridMesh;
-	geoGen.CreateGrid( 20.0f, 30.0f, 60, 40, gridMesh );
-
-	count = gridMesh.Vertices.size();
-	vertices.resize( count );
-	for ( size_t i = 0; i < count; i++ )
-	{
-		vertices[i].Position = gridMesh.Vertices[i].Position;
-		vertices[i].Color = green;
-	}
-
-	Batch* gridBatch = new Batch( &md3dDevice, &md3dImmediateContext, &vertices, &gridMesh.Indices );
-	m_gridModel = new Model( gridBatch );
-
-
-	// Set up Cylinder
-
-	GeometryGenerator::MeshData cylinderMesh;
-	geoGen.CreateCylinder( 0.5f, 0.3f, 3.0f, 20, 20, cylinderMesh );
-
-	count = cylinderMesh.Vertices.size();
-	vertices.resize( count );
-	for ( size_t i = 0; i < count; i++ )
-	{
-		vertices[i].Position = cylinderMesh.Vertices[i].Position;
-		vertices[i].Color = green;
-	}
-
-	Batch* cylinderBatch = new Batch( &md3dDevice, &md3dImmediateContext, &vertices, &cylinderMesh.Indices );
-	for ( int i = 0; i < 10; i++ )
-	{
-		Model* cylinderModel = new Model( cylinderBatch );
-
-		if ( i % 2 == 0 )
-		{
-			cylinderModel->SetTransition( XMFLOAT3( -5.0f, 1.5f, -10.0f + i*2.5f ) );
-		}
-		else
-		{
-			cylinderModel->SetTransition( XMFLOAT3( +5.0f, 1.5f, -10.0f + i*2.5f ) );
-		}
-
-		m_cylinderModels[i] = cylinderModel;
-
-	}
+	m_importedMeshModel->SetTransition( XMFLOAT3( 0.0f, 0.5f, 0.0f ) );
+	m_importedMeshModel->SetScale( XMFLOAT3( 2.0f, 1.0f, 2.0f ) );
 }
 
 void ShapesApp::BuildFX()
@@ -352,4 +292,29 @@ void ShapesApp::BuildWireFrameRasterState()
 	wireframeDesc.DepthClipEnable = true;
 	mRasterState = NULL;
 	HR( md3dDevice->CreateRasterizerState( &wireframeDesc, &mRasterState ) );
+}
+
+bool ShapesApp::ImportMeshFromFile( const std::string & filename, int* vertexCount )
+{
+	LPWSTR msg = 0;
+
+	Assimp::Importer importer;
+
+	const aiScene* scene = importer.ReadFile( filename, aiProcess_Triangulate );
+	if ( !scene )
+	{
+		fprintf( stderr, "ERROR: reading mesh %s\n", filename );
+		return false;
+	}
+
+	swprintf_s( msg, 256, L"  %i meshes", scene->mNumMeshes );
+	OutputDebugString( msg );
+
+	const aiMesh* mesh = scene->mMeshes[0];
+	swprintf_s( msg, 256, L"  %i vertices in mesh[0]\n", mesh->mNumVertices );
+	OutputDebugString( msg );
+
+	*vertexCount = mesh->mNumVertices;
+
+	return true;
 }
