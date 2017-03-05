@@ -134,7 +134,8 @@ void ShapesApp::UpdateScene( float dt )
 	float y = mRadius*cosf( mPhi );
 
 	// Build the view matrix.
-	XMVECTOR pos = XMVectorSet( x, y, z, 1.0f );
+	//XMVECTOR pos = XMVectorSet( x, y, z, 1.0f );
+	XMVECTOR pos = XMVectorSet( 1.0f, 0.0f, -5.0f, 1.0f );
 	XMVECTOR target = XMVectorZero();
 	XMVECTOR up = XMVectorSet( 0.0f, 1.0f, 0.0f, 0.0f );
 
