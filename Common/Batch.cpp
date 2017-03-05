@@ -9,6 +9,9 @@ Batch::Batch( ID3D11Device** device, ID3D11DeviceContext** deviceContext, std::v
 	m_ib( 0),
 	m_indexCount(0)
 {
+	//TODO: バッファの構築は外部で済ませておき、Batch は構築済みのバッファを受け取るのみとしたほうがよいかも
+	//      Batch が自分で Vertex の定義を抱えることになってしまうため
+
 	// 頂点バッファの構築
 
 	D3D11_BUFFER_DESC vbd;
