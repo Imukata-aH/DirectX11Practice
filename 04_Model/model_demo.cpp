@@ -8,8 +8,15 @@
 #include "GeometryGenerator.h"
 #include "Batch.h"
 #include "Model.h"
+#include "BufferHelper.h"
 using namespace DirectX;
 using namespace DirectX::PackedVector;
+
+struct Vertex
+{
+	XMFLOAT3 Position;
+	XMFLOAT4 Color;
+};
 
 class ShapesApp : public D3DApp
 {
@@ -248,7 +255,13 @@ void ShapesApp::BuildGeometryBuffers()
 		vertices[i].Color = green;
 	}
 
-	Batch* boxBatch = new Batch( &md3dDevice, &md3dImmediateContext, &vertices, &boxMesh.Indices );
+	ID3D11Buffer* boxVertexBuffer = nullptr;
+	ID3D11Buffer* boxIndexBuffer = nullptr;
+
+	BufferHelper<Vertex>::CreateVertexBuffer( &md3dDevice, vertices, &boxVertexBuffer );
+	BufferHelper<UINT>::CreateIndexBuffer( &md3dDevice, boxMesh.Indices, &boxIndexBuffer );
+
+	Batch* boxBatch = new Batch( &md3dDevice, &md3dImmediateContext, boxVertexBuffer, boxIndexBuffer, boxMesh.Indices.size(), sizeof(Vertex), 0 );
 	m_boxModel = new Model(boxBatch);
 
 	m_boxModel->SetTransition( XMFLOAT3(0.0f, 0.5f, 0.0f) );
@@ -268,7 +281,13 @@ void ShapesApp::BuildGeometryBuffers()
 		vertices[i].Color = green;
 	}
 
-	Batch* gridBatch = new Batch( &md3dDevice, &md3dImmediateContext, &vertices, &gridMesh.Indices );
+	ID3D11Buffer* gridVertexBuffer = nullptr;
+	ID3D11Buffer* gridIndexBuffer = nullptr;
+
+	BufferHelper<Vertex>::CreateVertexBuffer( &md3dDevice, vertices, &gridVertexBuffer );
+	BufferHelper<UINT>::CreateIndexBuffer( &md3dDevice, gridMesh.Indices, &gridIndexBuffer );
+
+	Batch* gridBatch = new Batch( &md3dDevice, &md3dImmediateContext, gridVertexBuffer, gridIndexBuffer, gridMesh.Indices.size(), sizeof(Vertex), 0 );
 	m_gridModel = new Model( gridBatch );
 
 
@@ -285,7 +304,13 @@ void ShapesApp::BuildGeometryBuffers()
 		vertices[i].Color = green;
 	}
 
-	Batch* cylinderBatch = new Batch( &md3dDevice, &md3dImmediateContext, &vertices, &cylinderMesh.Indices );
+	ID3D11Buffer* cylinderVertexBuffer = nullptr;
+	ID3D11Buffer* cylinderIndexBuffer = nullptr;
+
+	BufferHelper<Vertex>::CreateVertexBuffer( &md3dDevice, vertices, &cylinderVertexBuffer );
+	BufferHelper<UINT>::CreateIndexBuffer( &md3dDevice, gridMesh.Indices, &cylinderIndexBuffer );
+
+	Batch* cylinderBatch = new Batch( &md3dDevice, &md3dImmediateContext, cylinderVertexBuffer, cylinderIndexBuffer, cylinderMesh.Indices.size(), sizeof(Vertex), 0 );
 	for ( int i = 0; i < 10; i++ )
 	{
 		Model* cylinderModel = new Model( cylinderBatch );

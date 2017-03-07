@@ -172,6 +172,7 @@
       <SubType>
       </SubType>
     </ClInclude>
+    <ClInclude Include="..\Common\BufferHelper.h" />
     <ClInclude Include="..\Common\Camera.h" />
     <ClInclude Include="..\Common\ConstantBuffer.h" />
     <ClInclude Include="..\Common\d3dApp.h" />
