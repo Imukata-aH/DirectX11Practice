@@ -9,13 +9,24 @@
 #include "GeometryGenerator.h"
 #include "Batch.h"
 #include "Model.h"
+#include "BufferHelper.h"
+
+// Assimp
 #include "Importer.hpp"
 #include "scene.h"
 #include "postprocess.h"
+
 using namespace DirectX;
 using namespace DirectX::PackedVector;
 
 #define MESH_FILE "suzanne.obj"
+
+struct Vertex
+{
+	XMFLOAT3 Position;
+	XMFLOAT4 Color;
+};
+
 
 class ShapesApp : public D3DApp
 {
@@ -214,32 +225,21 @@ void ShapesApp::OnMouseMove( WPARAM btnState, int x, int y )
 
 void ShapesApp::BuildGeometryBuffers()
 {
-	//// Set up Box
-
-	//GeometryGenerator geoGen;
-
-	//GeometryGenerator::MeshData boxMesh;
-	//geoGen.CreateBox( 1.0f, 1.0f, 1.0f, boxMesh );
-
-	//// とりあえず頂点コピーしてるが、Vertex の定義をどこかにおいてそれを全体で使うか、頂点属性の使い分けをできるようにしたい
-	//XMFLOAT4 green( 0.0f, 0.8f, 0.0f, 1.0f );
-	//size_t count = boxMesh.Vertices.size();
-	//std::vector<Vertex> vertices( count );
-	//for ( size_t i = 0; i < count; i++ )
-	//{
-	//	vertices[i].Position = boxMesh.Vertices[i].Position;
-	//	vertices[i].Color = green;
-	//}
-
-	std::vector<Vertex>* vertices;
-	std::vector<UINT>* indices;
+	std::vector<Vertex>* vertices = nullptr;
+	std::vector<UINT>* indices = nullptr;
 	bool result = ImportMeshFromFile( MESH_FILE, &vertices, &indices );
 	if ( !result )
 	{
 		OutputDebugString( L"Reading mesh file failed.\n" );
 	}	
 
-	Batch* importexMeshBatch = new Batch( &md3dDevice, &md3dImmediateContext, vertices, indices );
+	ID3D11Buffer* vertexBuffer = nullptr;
+	ID3D11Buffer* indexBuffer = nullptr;
+
+	BufferHelper<Vertex>::CreateVertexBuffer( &md3dDevice, *vertices, &vertexBuffer );
+	BufferHelper<UINT>::CreateIndexBuffer( &md3dDevice, *indices, &indexBuffer );
+
+	Batch* importexMeshBatch = new Batch( &md3dDevice, &md3dImmediateContext, vertexBuffer, indexBuffer, indices->size(), sizeof( Vertex ), 0 );
 	m_importedMeshModel = new Model( importexMeshBatch );
 
 	delete vertices;

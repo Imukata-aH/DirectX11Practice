@@ -204,6 +204,10 @@ copy /Y "$(SolutionDir)\Common\meshes\suzanne.obj" "$(TargetDir)"</Command>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\Batch.h" />
+    <ClInclude Include="..\Common\BufferHelper.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="..\Common\Camera.h" />
     <ClInclude Include="..\Common\ConstantBuffer.h" />
     <ClInclude Include="..\Common\d3dApp.h" />

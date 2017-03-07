@@ -5,12 +5,6 @@
 #include "d3dUtil.h"
 #include "ConstantBuffer.h"
 
-struct Vertex
-{
-	XMFLOAT3 Position;
-	XMFLOAT4 Color;
-};
-
 struct ConstantsPerObject
 {
 	DirectX::XMFLOAT4X4 m_WorldViewProj;
@@ -19,7 +13,7 @@ struct ConstantsPerObject
 class Batch
 {
 public:
-	Batch( ID3D11Device** device, ID3D11DeviceContext** deviceContext, std::vector<Vertex>* vertices, std::vector<UINT>* indices);
+	Batch( ID3D11Device** device, ID3D11DeviceContext** deviceContext, ID3D11Buffer* vertexBuffer, ID3D11Buffer* indexBuffer, UINT indexCount, UINT stride, UINT offset );
 	~Batch();
 
 	void Release();
@@ -34,4 +28,6 @@ private:
 	ID3D11Buffer* m_ib;
 
 	UINT m_indexCount;
+	UINT m_stride;
+	UINT m_offset;
 };

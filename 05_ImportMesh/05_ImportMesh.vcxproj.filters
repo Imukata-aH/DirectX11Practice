@@ -91,5 +91,8 @@
     <ClInclude Include="..\Common\ShaderHelper.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="..\Common\BufferHelper.h">
+      <Filter>common</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
