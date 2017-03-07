@@ -239,7 +239,7 @@ void ShapesApp::BuildGeometryBuffers()
 	BufferHelper<Vertex>::CreateVertexBuffer( &md3dDevice, *vertices, &vertexBuffer );
 	BufferHelper<UINT>::CreateIndexBuffer( &md3dDevice, *indices, &indexBuffer );
 
-	Batch* importexMeshBatch = new Batch( &md3dDevice, &md3dImmediateContext, &vertexBuffer, &indexBuffer, indices->size(), sizeof( Vertex ), 0 );
+	Batch* importexMeshBatch = new Batch( &md3dDevice, &md3dImmediateContext, vertexBuffer, indexBuffer, indices->size(), sizeof( Vertex ), 0 );
 	m_importedMeshModel = new Model( importexMeshBatch );
 
 	delete vertices;
