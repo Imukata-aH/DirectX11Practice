@@ -1,7 +1,16 @@
+struct Material
+{
+	float4 Ambient;
+	float4 Diffuse;
+	float4 Specular; // w = SpecPower
+	float4 Reflect;
+};
+
 cbuffer cbPerObject : register(b0)
 {
 	float4x4 gWorld;
 	float4x4 gWorldViewProj;
+	Material gMaterial;
 };
 
 struct VertexIn

@@ -184,7 +184,7 @@ void ShapesApp::DrawScene()
 	mFrameConstantBuffer.ApplyChanges( md3dImmediateContext );
 
 	auto buffer = mFrameConstantBuffer.Buffer();
-	md3dImmediateContext->PSSetConstantBuffers( 0, 1, &buffer );
+	md3dImmediateContext->PSSetConstantBuffers( 1, 1, &buffer );
 
 	// Set vertex and pixel shaders
 	md3dImmediateContext->PSSetShader( mPixelShader, NULL, 0 );
@@ -263,7 +263,12 @@ void ShapesApp::BuildGeometryBuffers()
 	BufferHelper<Vertex>::CreateVertexBuffer( &md3dDevice, *vertices, &vertexBuffer );
 	BufferHelper<UINT>::CreateIndexBuffer( &md3dDevice, *indices, &indexBuffer );
 
-	Batch* importexMeshBatch = new Batch( &md3dDevice, &md3dImmediateContext, vertexBuffer, indexBuffer, indices->size(), sizeof( Vertex ), 0 );
+	Material material;
+	material.Ambient = XMFLOAT4( 0.48f, 0.77f, 0.46f, 1.0f );
+	material.Diffuse = XMFLOAT4( 0.48f, 0.77f, 0.46f, 1.0f );
+	material.Specular = XMFLOAT4( 0.2f, 0.2f, 0.2f, 16.0f );
+
+	Batch* importexMeshBatch = new Batch( &md3dDevice, &md3dImmediateContext, vertexBuffer, indexBuffer, indices->size(), sizeof( Vertex ), 0, material );
 	m_importedMeshModel = new Model( importexMeshBatch );
 
 	delete vertices;

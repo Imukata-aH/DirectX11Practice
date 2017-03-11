@@ -7,7 +7,22 @@ struct DirectionalLight
 	float pad;
 };
 
-cbuffer cbPerFrame : register(b0)
+struct Material
+{
+	float4 Ambient;
+	float4 Diffuse;
+	float4 Specular; // w = SpecPower
+	float4 Reflect;
+};
+
+cbuffer cbPerObject : register(b0)
+{
+	float4x4 gWorld;
+	float4x4 gWorldViewProj;
+	Material gMaterial;
+};
+
+cbuffer cbPerFrame : register(b1)
 {
 	DirectionalLight gDirLight;
 }
@@ -18,7 +33,7 @@ struct VertexOut
 	float3 NormalWorld : NORMAL;
 };
 
-void ComputeDirectionalLight(float3 normal, DirectionalLight light, out float4 diffuse)
+void ComputeDirectionalLight(float3 normal, DirectionalLight light, Material mat, out float4 diffuse)
 {
 	diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
@@ -29,7 +44,7 @@ void ComputeDirectionalLight(float3 normal, DirectionalLight light, out float4 d
 	[flatten]
 	if (diffuseFactor > 0.0f)
 	{
-		diffuse = float4(diffuseFactor, diffuseFactor, diffuseFactor, 1.0f);
+		diffuse = diffuseFactor * mat.Diffuse * light.Diffuse;
 	}
 }
 
@@ -38,7 +53,7 @@ float4 main(VertexOut vin) : SV_TARGET
 {
 	float4 diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
 	
-	ComputeDirectionalLight(vin.NormalWorld, gDirLight, diffuse);
+	ComputeDirectionalLight(vin.NormalWorld, gDirLight, gMaterial, diffuse);
 
 	return diffuse;
 }
