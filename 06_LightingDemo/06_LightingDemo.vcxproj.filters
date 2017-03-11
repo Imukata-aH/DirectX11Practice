@@ -92,5 +92,19 @@
     <ClInclude Include="..\Common\ShaderHelper.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="cbPerObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cbPerFrame.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="..\Common\shader\LightingPixelShader.hlsl">
+      <Filter>shader</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Common\shader\LightingVertexShader.hlsl">
+      <Filter>shader</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>
