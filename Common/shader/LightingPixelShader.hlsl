@@ -33,11 +33,14 @@ struct VertexOut
 	float3 NormalWorld : NORMAL;
 };
 
-void ComputeDirectionalLight(float3 normal, DirectionalLight light, Material mat, out float4 diffuse)
+void ComputeDirectionalLight(float3 normal, DirectionalLight light, Material mat, out float4 ambient, out float4 diffuse)
 {
+	ambient = float4(0.0f, 0.0f, 0.0f, 0.0f);
 	diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
 	float3 lightVec = -light.Direction;
+
+	ambient = mat.Ambient * light.Ambient;
 
 	float diffuseFactor = dot(lightVec, normal);
 
@@ -51,9 +54,10 @@ void ComputeDirectionalLight(float3 normal, DirectionalLight light, Material mat
 
 float4 main(VertexOut vin) : SV_TARGET
 {
+	float4 ambient = float4(0.0f, 0.0f, 0.0f, 0.0f);
 	float4 diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
 	
-	ComputeDirectionalLight(vin.NormalWorld, gDirLight, gMaterial, diffuse);
+	ComputeDirectionalLight(vin.NormalWorld, gDirLight, gMaterial, ambient, diffuse);
 
-	return diffuse;
+	return ambient + diffuse;
 }
