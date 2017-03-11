@@ -24,12 +24,13 @@ void Batch::Release()
 	ReleaseCOM( ( m_ib ) );
 }
 
-void Batch::Draw( const XMMATRIX& wvmMatrix, ConstantBuffer<ConstantsPerObject>* constantBuffer )
+void Batch::Draw( const XMMATRIX& worldMatrix, const XMMATRIX& wvmMatrix, ConstantBuffer<ConstantsPerObject>* constantBuffer )
 {
 	//// Constant Buffer の更新
 
 	ConstantsPerObject constants;
 
+	XMStoreFloat4x4( &constants.m_World, worldMatrix );
 	XMStoreFloat4x4( &constants.m_WorldViewProj, wvmMatrix );
 	constantBuffer->Data = constants;
 	constantBuffer->ApplyChanges( *m_deviceContext );

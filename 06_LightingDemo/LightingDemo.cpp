@@ -10,6 +10,8 @@
 #include "Batch.h"
 #include "Model.h"
 #include "BufferHelper.h"
+#include "LightHelper.h"
+#include "cbPerFrame.h"
 
 // Assimp
 #include "Importer.hpp"
@@ -54,6 +56,7 @@ private:
 
 private:
 	ConstantBuffer<ConstantsPerObject> mObjectConstantBuffer;
+	ConstantBuffer<ConstantsPerFrame> mFrameConstantBuffer;
 	ID3DBlob* mPSBlob;
 	ID3DBlob* mVSBlob;
 	ID3D11PixelShader* mPixelShader;
@@ -65,6 +68,8 @@ private:
 	XMFLOAT4X4 mProj;
 
 	Model* m_importedMeshModel;
+	
+	DirectionalLight mDirLight;
 
 	float mTheta;
 	float mPhi;
@@ -94,7 +99,13 @@ ShapesApp::ShapesApp( HINSTANCE hInstance )
 	: D3DApp( hInstance ), mInputLayout( 0 ),
 	mTheta( 0.1f*MathHelper::Pi ), mPhi( 0.5f*MathHelper::Pi ), mRadius( 10.0f )
 {
-	mMainWndCaption = L"Shapes Demo";
+	mMainWndCaption = L"Lighting Demo";
+
+	// Directional light.
+	mDirLight.Ambient = XMFLOAT4( 0.2f, 0.2f, 0.2f, 1.0f );
+	mDirLight.Diffuse = XMFLOAT4( 0.5f, 0.5f, 0.5f, 1.0f );
+	mDirLight.Specular = XMFLOAT4( 0.5f, 0.5f, 0.5f, 1.0f );
+	mDirLight.Direction = XMFLOAT3( 0.57735f, -0.57735f, 0.57735f );
 
 	mLastMousePos.x = 0;
 	mLastMousePos.y = 0;
@@ -126,6 +137,7 @@ bool ShapesApp::Init()
 	//BuildWireFrameRasterState();
 
 	mObjectConstantBuffer.Initialize( md3dDevice );
+	mFrameConstantBuffer.Initialize( md3dDevice );
 
 	return true;
 }
@@ -164,6 +176,15 @@ void ShapesApp::DrawScene()
 
 	md3dImmediateContext->ClearRenderTargetView( mRenderTargetView, reinterpret_cast<const float*>( &Colors::LightSteelBlue ) );
 	md3dImmediateContext->ClearDepthStencilView( mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0 );
+
+	// Apply lights data
+	ConstantsPerFrame cbPerFrame;
+	cbPerFrame.mDirLight = mDirLight;
+	mFrameConstantBuffer.Data = cbPerFrame;
+	mFrameConstantBuffer.ApplyChanges( md3dImmediateContext );
+
+	auto buffer = mFrameConstantBuffer.Buffer();
+	md3dImmediateContext->PSSetConstantBuffers( 0, 1, &buffer );
 
 	// Set vertex and pixel shaders
 	md3dImmediateContext->PSSetShader( mPixelShader, NULL, 0 );

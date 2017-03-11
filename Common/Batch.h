@@ -7,6 +7,7 @@
 
 struct ConstantsPerObject
 {
+	DirectX::XMFLOAT4X4 m_World;
 	DirectX::XMFLOAT4X4 m_WorldViewProj;
 };
 
@@ -18,7 +19,7 @@ public:
 
 	void Release();
 
-	void Draw( const XMMATRIX& wvmMatrix, ConstantBuffer<ConstantsPerObject>* constantBuffer );
+	void Draw( const XMMATRIX& worldMatrix, const XMMATRIX& wvmMatrix, ConstantBuffer<ConstantsPerObject>* constantBuffer );
 
 private:
 	ID3D11Device** m_device;
