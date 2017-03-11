@@ -1,4 +1,5 @@
 ﻿#include "Batch.h"
+#include "MathHelper.h"
 #include <DirectXColors.h>
 using namespace DirectX;
 
@@ -31,8 +32,17 @@ void Batch::Draw( const XMMATRIX& worldMatrix, const XMMATRIX& wvmMatrix, Consta
 
 	ConstantsPerObject constants;
 
-	XMStoreFloat4x4( &constants.m_World, worldMatrix );
-	XMStoreFloat4x4( &constants.m_WorldViewProj, wvmMatrix );
+	// HLSL に行列を渡す前にアプリケーション側で Transpose する必要がある
+
+	XMMATRIX wvmTransposed = XMMatrixTranspose( wvmMatrix );
+	XMMATRIX worldTransposed = XMMatrixTranspose( worldMatrix );
+
+	XMMATRIX worldInvTranspose = MathHelper::InverseTranspose( worldMatrix );
+	worldInvTranspose = XMMatrixTranspose( worldInvTranspose );
+
+	XMStoreFloat4x4( &constants.m_World, worldTransposed );
+	XMStoreFloat4x4( &constants.m_WorldInvTranspose, worldInvTranspose );
+	XMStoreFloat4x4( &constants.m_WorldViewProj, wvmTransposed );
 	constants.mMaterial = mMaterial;
 	constantBuffer->Data = constants;
 	constantBuffer->ApplyChanges( *m_deviceContext );

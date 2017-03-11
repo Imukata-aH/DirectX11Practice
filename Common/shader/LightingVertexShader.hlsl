@@ -9,6 +9,7 @@ struct Material
 cbuffer cbPerObject : register(b0)
 {
 	float4x4 gWorld;
+	float4x4 gWorldInvTranspose;
 	float4x4 gWorldViewProj;
 	Material gMaterial;
 };
@@ -35,7 +36,7 @@ VertexOut main(VertexIn vin)
 
 	vout.PosW = mul(float4(vin.Pos, 1.0f), gWorld).xyz;
 
-	vout.NormalW = mul(vin.NormalL, (float3x3)gWorld);
+	vout.NormalW = mul(vin.NormalL, (float3x3) gWorldInvTranspose);
 	vout.NormalW = normalize(vout.NormalW);
 
 	return vout;

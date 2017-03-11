@@ -9,6 +9,7 @@
 struct ConstantsPerObject
 {
 	DirectX::XMFLOAT4X4 m_World;
+	DirectX::XMFLOAT4X4 m_WorldInvTranspose;
 	DirectX::XMFLOAT4X4 m_WorldViewProj;
 	Material mMaterial;
 };

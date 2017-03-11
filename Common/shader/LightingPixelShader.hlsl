@@ -47,6 +47,7 @@ struct Material
 cbuffer cbPerObject : register(b0)
 {
 	float4x4 gWorld;
+	float4x4 gWorldInvTranspose;
 	float4x4 gWorldViewProj;
 	Material gMaterial;
 };
