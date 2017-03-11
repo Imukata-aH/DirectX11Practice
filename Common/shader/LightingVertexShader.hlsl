@@ -16,13 +16,14 @@ cbuffer cbPerObject : register(b0)
 struct VertexIn
 {
 	float3 Pos : POSITION;
-	float3 NormalLocal : NORMAL;
+	float3 NormalL : NORMAL;
 };
 
 struct VertexOut
 {
 	float4 PosH : SV_POSITION;
-	float3 NormalWorld : NORMAL;
+	float3 PosW : POSITION;
+	float3 NormalW : NORMAL;
 };
 
 VertexOut main(VertexIn vin)
@@ -32,8 +33,10 @@ VertexOut main(VertexIn vin)
 	//transform to homogenous clip space 
 	vout.PosH = mul(float4(vin.Pos, 1.0f), gWorldViewProj);
 
-	vout.NormalWorld = mul(vin.NormalLocal, (float3x3)gWorld);
-	vout.NormalWorld = normalize(vout.NormalWorld);
+	vout.PosW = mul(float4(vin.Pos, 1.0f), gWorld).xyz;
+
+	vout.NormalW = mul(vin.NormalL, (float3x3)gWorld);
+	vout.NormalW = normalize(vout.NormalW);
 
 	return vout;
 }

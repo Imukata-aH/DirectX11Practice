@@ -30,11 +30,11 @@ struct Vertex
 };
 
 
-class ShapesApp : public D3DApp
+class LightingApp : public D3DApp
 {
 public:
-	ShapesApp( HINSTANCE hInstance );
-	~ShapesApp();
+	LightingApp( HINSTANCE hInstance );
+	~LightingApp();
 
 	bool Init();
 	void OnResize();
@@ -70,6 +70,7 @@ private:
 	Model* m_importedMeshModel;
 	
 	DirectionalLight mDirLight;
+	PointLight mPointLight;
 	XMFLOAT3 mEyePosW;
 
 	float mTheta;
@@ -87,7 +88,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE prevInstance,
 	_CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
 #endif
 
-	ShapesApp theApp( hInstance );
+	LightingApp theApp( hInstance );
 
 	if ( !theApp.Init() )
 		return 0;
@@ -96,23 +97,29 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE prevInstance,
 }
 
 
-ShapesApp::ShapesApp( HINSTANCE hInstance )
+LightingApp::LightingApp( HINSTANCE hInstance )
 	: D3DApp( hInstance ), mInputLayout( 0 ),
 	mTheta( 0.1f*MathHelper::Pi ), mPhi( 0.5f*MathHelper::Pi ), mRadius( 10.0f ), mEyePosW( 0.0f, 0.0f, 0.0f )
 {
 	mMainWndCaption = L"Lighting Demo";
 
 	// Directional light.
-	mDirLight.Ambient = XMFLOAT4( 0.2f, 0.2f, 0.2f, 1.0f );
+	mDirLight.Ambient = XMFLOAT4( 0.1f, 0.1f, 0.1f, 1.0f );
 	mDirLight.Diffuse = XMFLOAT4( 0.5f, 0.5f, 0.5f, 1.0f );
 	mDirLight.Specular = XMFLOAT4( 0.5f, 0.5f, 0.5f, 1.0f );
 	mDirLight.Direction = XMFLOAT3( 0.57735f, -0.57735f, 0.57735f );
+
+	mPointLight.Ambient = XMFLOAT4( 0.1f, 0.1f, 0.1f, 1.0f );
+	mPointLight.Diffuse = XMFLOAT4( 0.7f, 0.7f, 0.7f, 1.0f );
+	mPointLight.Specular = XMFLOAT4( 0.7f, 0.7f, 0.7f, 1.0f );
+	mPointLight.Att = XMFLOAT3( 0.0f, 0.1f, 0.0f );
+	mPointLight.Range = 25.0f;
 
 	mLastMousePos.x = 0;
 	mLastMousePos.y = 0;
 }
 
-ShapesApp::~ShapesApp()
+LightingApp::~LightingApp()
 {
 	m_importedMeshModel->Release();
 	delete m_importedMeshModel;
@@ -125,7 +132,7 @@ ShapesApp::~ShapesApp()
 	ReleaseCOM( md3dDevice );
 }
 
-bool ShapesApp::Init()
+bool LightingApp::Init()
 {
 	if ( !D3DApp::Init() )
 		return false;
@@ -143,7 +150,7 @@ bool ShapesApp::Init()
 	return true;
 }
 
-void ShapesApp::OnResize()
+void LightingApp::OnResize()
 {
 	D3DApp::OnResize();
 
@@ -152,7 +159,7 @@ void ShapesApp::OnResize()
 	XMStoreFloat4x4( &mProj, P );
 }
 
-void ShapesApp::UpdateScene( float dt )
+void LightingApp::UpdateScene( float dt )
 {
 	// Convert Spherical to Cartesian coordinates.
 	float x = mRadius*sinf( mPhi )*cosf( mTheta );
@@ -169,9 +176,13 @@ void ShapesApp::UpdateScene( float dt )
 
 	XMMATRIX V = XMMatrixLookAtLH( pos, target, up );
 	XMStoreFloat4x4( &mView, V );
+
+	mPointLight.Position.x = 10.0f*cosf( 0.2f*mTimer.TotalTime() );
+	mPointLight.Position.z = 10.0f*sinf( 0.2f*mTimer.TotalTime() );
+	mPointLight.Position.y = 0.0f;
 }
 
-void ShapesApp::DrawScene()
+void LightingApp::DrawScene()
 {
 	md3dImmediateContext->IASetInputLayout( mInputLayout );
 	md3dImmediateContext->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
@@ -182,6 +193,7 @@ void ShapesApp::DrawScene()
 	// Apply lights data
 	ConstantsPerFrame cbPerFrame;
 	cbPerFrame.mDirLight = mDirLight;
+	cbPerFrame.mPointLight = mPointLight;
 	cbPerFrame.mEyePosW = mEyePosW;
 	mFrameConstantBuffer.Data = cbPerFrame;
 	mFrameConstantBuffer.ApplyChanges( md3dImmediateContext );
@@ -205,7 +217,7 @@ void ShapesApp::DrawScene()
 	HR( mSwapChain->Present( 0, 0 ) );
 }
 
-void ShapesApp::OnMouseDown( WPARAM btnState, int x, int y )
+void LightingApp::OnMouseDown( WPARAM btnState, int x, int y )
 {
 	mLastMousePos.x = x;
 	mLastMousePos.y = y;
@@ -213,12 +225,12 @@ void ShapesApp::OnMouseDown( WPARAM btnState, int x, int y )
 	SetCapture( mhMainWnd );
 }
 
-void ShapesApp::OnMouseUp( WPARAM btnState, int x, int y )
+void LightingApp::OnMouseUp( WPARAM btnState, int x, int y )
 {
 	ReleaseCapture();
 }
 
-void ShapesApp::OnMouseMove( WPARAM btnState, int x, int y )
+void LightingApp::OnMouseMove( WPARAM btnState, int x, int y )
 {
 	if ( ( btnState & MK_LBUTTON ) != 0 )
 	{
@@ -250,7 +262,7 @@ void ShapesApp::OnMouseMove( WPARAM btnState, int x, int y )
 	mLastMousePos.y = y;
 }
 
-void ShapesApp::BuildGeometryBuffers()
+void LightingApp::BuildGeometryBuffers()
 {
 	std::vector<Vertex>* vertices = nullptr;
 	std::vector<UINT>* indices = nullptr;
@@ -281,7 +293,7 @@ void ShapesApp::BuildGeometryBuffers()
 	indices = 0;
 }
 
-void ShapesApp::BuildFX()
+void LightingApp::BuildFX()
 {
 	DWORD shaderFlags = 0;
 #if defined( DEBUG ) || defined( _DEBUG )
@@ -297,7 +309,7 @@ void ShapesApp::BuildFX()
 	HR( md3dDevice->CreateVertexShader( mVSBlob->GetBufferPointer(), mVSBlob->GetBufferSize(), NULL, &mVertexShader ) );
 }
 
-void ShapesApp::BuildVertexLayout()
+void LightingApp::BuildVertexLayout()
 {
 	// Create the vertex input layout.
 	D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
@@ -309,7 +321,7 @@ void ShapesApp::BuildVertexLayout()
 	HR( md3dDevice->CreateInputLayout( vertexDesc, 2, mVSBlob->GetBufferPointer(), mVSBlob->GetBufferSize(), &mInputLayout ) );
 }
 
-void ShapesApp::BuildRasterState()
+void LightingApp::BuildRasterState()
 {
 	D3D11_RASTERIZER_DESC rs;
 	memset( &rs, 0, sizeof( rs ) );
@@ -320,7 +332,7 @@ void ShapesApp::BuildRasterState()
 	HR( md3dDevice->CreateRasterizerState( &rs, &mRasterState ) );
 }
 
-void ShapesApp::BuildWireFrameRasterState()
+void LightingApp::BuildWireFrameRasterState()
 {
 	D3D11_RASTERIZER_DESC wireframeDesc;
 	ZeroMemory( &wireframeDesc, sizeof( D3D11_RASTERIZER_DESC ) );
@@ -332,7 +344,7 @@ void ShapesApp::BuildWireFrameRasterState()
 	HR( md3dDevice->CreateRasterizerState( &wireframeDesc, &mRasterState ) );
 }
 
-bool ShapesApp::ImportMeshFromFile( const std::string & filename, std::vector<Vertex>** vertices, std::vector<UINT>** indices )
+bool LightingApp::ImportMeshFromFile( const std::string & filename, std::vector<Vertex>** vertices, std::vector<UINT>** indices )
 {
 	wchar_t msg[256];
 
