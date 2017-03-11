@@ -25,6 +25,7 @@ cbuffer cbPerObject : register(b0)
 cbuffer cbPerFrame : register(b1)
 {
 	DirectionalLight gDirLight;
+	float3 gEyePosW;
 }
 
 struct VertexOut
@@ -33,10 +34,11 @@ struct VertexOut
 	float3 NormalWorld : NORMAL;
 };
 
-void ComputeDirectionalLight(float3 normal, DirectionalLight light, Material mat, out float4 ambient, out float4 diffuse)
+void ComputeDirectionalLight(float3 normal, DirectionalLight light, Material mat, float3 eyePos, out float4 ambient, out float4 diffuse, out float4 specular)
 {
 	ambient = float4(0.0f, 0.0f, 0.0f, 0.0f);
 	diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
+	specular = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
 	float3 lightVec = -light.Direction;
 
@@ -47,6 +49,10 @@ void ComputeDirectionalLight(float3 normal, DirectionalLight light, Material mat
 	[flatten]
 	if (diffuseFactor > 0.0f)
 	{
+		float3 v = reflect(-lightVec, normal);
+		float specFactor = pow(max(dot(v, eyePos), 0.0f), mat.Specular.w);
+
+		specular = specFactor * mat.Specular * light.Specular;
 		diffuse = diffuseFactor * mat.Diffuse * light.Diffuse;
 	}
 }
@@ -56,8 +62,9 @@ float4 main(VertexOut vin) : SV_TARGET
 {
 	float4 ambient = float4(0.0f, 0.0f, 0.0f, 0.0f);
 	float4 diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
+	float4 specular = float4(0.0f, 0.0f, 0.0f, 0.0f);
 	
-	ComputeDirectionalLight(vin.NormalWorld, gDirLight, gMaterial, ambient, diffuse);
+	ComputeDirectionalLight(vin.NormalWorld, gDirLight, gMaterial, gEyePosW, ambient, diffuse, specular);
 
-	return ambient + diffuse;
+	return ambient + diffuse + specular;
 }

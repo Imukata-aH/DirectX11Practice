@@ -5,4 +5,5 @@
 struct ConstantsPerFrame
 {
 	DirectionalLight mDirLight;
+	XMFLOAT3 mEyePosW;
 };

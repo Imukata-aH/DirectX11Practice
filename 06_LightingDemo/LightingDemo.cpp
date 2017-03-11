@@ -70,6 +70,7 @@ private:
 	Model* m_importedMeshModel;
 	
 	DirectionalLight mDirLight;
+	XMFLOAT3 mEyePosW;
 
 	float mTheta;
 	float mPhi;
@@ -97,7 +98,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE prevInstance,
 
 ShapesApp::ShapesApp( HINSTANCE hInstance )
 	: D3DApp( hInstance ), mInputLayout( 0 ),
-	mTheta( 0.1f*MathHelper::Pi ), mPhi( 0.5f*MathHelper::Pi ), mRadius( 10.0f )
+	mTheta( 0.1f*MathHelper::Pi ), mPhi( 0.5f*MathHelper::Pi ), mRadius( 10.0f ), mEyePosW( 0.0f, 0.0f, 0.0f )
 {
 	mMainWndCaption = L"Lighting Demo";
 
@@ -158,10 +159,11 @@ void ShapesApp::UpdateScene( float dt )
 	float z = mRadius*sinf( mPhi )*sinf( mTheta );
 	float y = mRadius*cosf( mPhi );
 
+	mEyePosW = XMFLOAT3( x, y, z );
+
 	// Build the view matrix.
 	XMVECTOR pos = XMVectorSet( x, y, z, 1.0f );
 	//XMVECTOR pos = XMVectorSet( 1.0f, 0.0f, -5.0f, 1.0f );
-
 	XMVECTOR target = XMVectorZero();
 	XMVECTOR up = XMVectorSet( 0.0f, 1.0f, 0.0f, 0.0f );
 
@@ -180,6 +182,7 @@ void ShapesApp::DrawScene()
 	// Apply lights data
 	ConstantsPerFrame cbPerFrame;
 	cbPerFrame.mDirLight = mDirLight;
+	cbPerFrame.mEyePosW = mEyePosW;
 	mFrameConstantBuffer.Data = cbPerFrame;
 	mFrameConstantBuffer.ApplyChanges( md3dImmediateContext );
 
