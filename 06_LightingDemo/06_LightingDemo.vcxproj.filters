@@ -106,5 +106,8 @@
     <FxCompile Include="..\Common\shader\LightingVertexShader.hlsl">
       <Filter>shader</Filter>
     </FxCompile>
+    <FxCompile Include="..\Common\shader\LightHelper.h">
+      <Filter>shader</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>
