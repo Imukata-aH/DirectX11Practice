@@ -57,6 +57,9 @@
     <ClCompile Include="Vertex.cpp">
       <Filter>common</Filter>
     </ClCompile>
+    <ClCompile Include="Effects.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\Batch.h">
@@ -103,6 +106,9 @@
     </ClInclude>
     <ClInclude Include="Vertex.h">
       <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="Effects.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

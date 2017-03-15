@@ -11,8 +11,6 @@ cbuffer cbPerObject : register(b0)
 cbuffer cbPerFrame : register(b1)
 {
 	DirectionalLight gDirLight;
-	PointLight gPointLight;
-	SpotLight gSpotLight;
 	float3 gEyePosW;
 }
 
@@ -34,16 +32,6 @@ float4 main(VertexOut pin) : SV_TARGET
 	float4 A, D, S;
 
 	ComputeDirectionalLight(pin.NormalW, gDirLight, gMaterial, toEyeW, A, D, S);
-	ambient += A;
-	diffuse += D;
-	specular += S;
-
-	ComputePointLight(pin.NormalW, gPointLight, gMaterial, pin.PosW, toEyeW, A, D, S);
-	ambient += A;
-	diffuse += D;
-	specular += S;
-
-	ComputeSpotLight(pin.NormalW, gSpotLight, gMaterial, pin.PosW, toEyeW, A, D, S);
 	ambient += A;
 	diffuse += D;
 	specular += S;

@@ -176,6 +176,10 @@ copy /Y "$(SolutionDir)\Common\meshes\suzanne.obj" "$(TargetDir)"</Command>
     <ClCompile Include="..\Common\MathHelper.cpp" />
     <ClCompile Include="..\Common\Model.cpp" />
     <ClCompile Include="..\Common\ShaderHelper.cpp" />
+    <ClCompile Include="Effects.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
     <ClCompile Include="LightingDemo.cpp" />
     <ClCompile Include="Vertex.cpp">
       <SubType>
@@ -195,6 +199,10 @@ copy /Y "$(SolutionDir)\Common\meshes\suzanne.obj" "$(TargetDir)"</Command>
     <ClInclude Include="..\Common\MathHelper.h" />
     <ClInclude Include="..\Common\Model.h" />
     <ClInclude Include="..\Common\ShaderHelper.h" />
+    <ClInclude Include="Effects.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="Vertex.h">
       <SubType>
       </SubType>
