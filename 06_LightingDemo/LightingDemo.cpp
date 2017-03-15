@@ -12,6 +12,7 @@
 #include "BufferHelper.h"
 #include "LightHelper.h"
 #include "cbPerFrame.h"
+#include "Vertex.h"
 
 // Assimp
 #include "Importer.hpp"
@@ -22,13 +23,6 @@ using namespace DirectX;
 using namespace DirectX::PackedVector;
 
 #define MESH_FILE "suzanne.obj"
-
-struct Vertex
-{
-	XMFLOAT3 Position;
-	XMFLOAT3 Normal;
-};
-
 
 class LightingApp : public D3DApp
 {
@@ -48,11 +42,10 @@ public:
 private:
 	void BuildGeometryBuffers();
 	void BuildFX();
-	void BuildVertexLayout();
 	void BuildRasterState();
 	void BuildWireFrameRasterState();
 
-	bool ImportMeshFromFile( const std::string & filename, std::vector<Vertex>** vertices, std::vector<UINT>** indices );
+	bool ImportMeshFromFile( const std::string & filename, std::vector<Vertex::PosNormal>** vertices, std::vector<UINT>** indices );
 
 private:
 	ConstantBuffer<ConstantsPerObject> mObjectConstantBuffer;
@@ -61,7 +54,6 @@ private:
 	ID3DBlob* mVSBlob;
 	ID3D11PixelShader* mPixelShader;
 	ID3D11VertexShader* mVertexShader;
-	ID3D11InputLayout* mInputLayout;
 	ID3D11RasterizerState* mRasterState;
 
 	XMFLOAT4X4 mView;
@@ -99,7 +91,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE prevInstance,
 
 
 LightingApp::LightingApp( HINSTANCE hInstance )
-	: D3DApp( hInstance ), mInputLayout( 0 ),
+	: D3DApp( hInstance ),
 	mTheta( 0.1f*MathHelper::Pi ), mPhi( 0.5f*MathHelper::Pi ), mRadius( 10.0f ), mEyePosW( 0.0f, 0.0f, 0.0f )
 {
 	mMainWndCaption = L"Lighting Demo";
@@ -133,7 +125,7 @@ LightingApp::~LightingApp()
 	delete m_importedMeshModel;
 	m_importedMeshModel = 0;
 
-	ReleaseCOM( mInputLayout );
+	InputLayouts::DestroyAll();
 	ReleaseCOM( mPSBlob );
 	ReleaseCOM( mVSBlob );
 	ReleaseCOM( md3dImmediateContext );
@@ -147,7 +139,8 @@ bool LightingApp::Init()
 
 	BuildGeometryBuffers();
 	BuildFX();
-	BuildVertexLayout();
+
+	InputLayouts::InitAll( md3dDevice, mVSBlob );
 
 	BuildRasterState();
 	//BuildWireFrameRasterState();
@@ -199,7 +192,7 @@ void LightingApp::UpdateScene( float dt )
 
 void LightingApp::DrawScene()
 {
-	md3dImmediateContext->IASetInputLayout( mInputLayout );
+	md3dImmediateContext->IASetInputLayout( InputLayouts::PosNormal );
 	md3dImmediateContext->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
 
 	md3dImmediateContext->ClearRenderTargetView( mRenderTargetView, reinterpret_cast<const float*>( &Colors::LightSteelBlue ) );
@@ -280,7 +273,7 @@ void LightingApp::OnMouseMove( WPARAM btnState, int x, int y )
 
 void LightingApp::BuildGeometryBuffers()
 {
-	std::vector<Vertex>* vertices = nullptr;
+	std::vector<Vertex::PosNormal>* vertices = nullptr;
 	std::vector<UINT>* indices = nullptr;
 	bool result = ImportMeshFromFile( MESH_FILE, &vertices, &indices );
 	if ( !result )
@@ -291,7 +284,7 @@ void LightingApp::BuildGeometryBuffers()
 	ID3D11Buffer* vertexBuffer = nullptr;
 	ID3D11Buffer* indexBuffer = nullptr;
 
-	BufferHelper<Vertex>::CreateVertexBuffer( &md3dDevice, *vertices, &vertexBuffer );
+	BufferHelper<Vertex::PosNormal>::CreateVertexBuffer( &md3dDevice, *vertices, &vertexBuffer );
 	BufferHelper<UINT>::CreateIndexBuffer( &md3dDevice, *indices, &indexBuffer );
 
 	Material material;
@@ -299,7 +292,7 @@ void LightingApp::BuildGeometryBuffers()
 	material.Diffuse = XMFLOAT4( 0.48f, 0.77f, 0.46f, 1.0f );
 	material.Specular = XMFLOAT4( 0.2f, 0.2f, 0.2f, 16.0f );
 
-	Batch* importexMeshBatch = new Batch( &md3dDevice, &md3dImmediateContext, vertexBuffer, indexBuffer, indices->size(), sizeof( Vertex ), 0, material );
+	Batch* importexMeshBatch = new Batch( &md3dDevice, &md3dImmediateContext, vertexBuffer, indexBuffer, indices->size(), sizeof( Vertex::PosNormal ), 0, material );
 	m_importedMeshModel = new Model( importexMeshBatch );
 
 	delete vertices;
@@ -325,18 +318,6 @@ void LightingApp::BuildFX()
 	HR( md3dDevice->CreateVertexShader( mVSBlob->GetBufferPointer(), mVSBlob->GetBufferSize(), NULL, &mVertexShader ) );
 }
 
-void LightingApp::BuildVertexLayout()
-{
-	// Create the vertex input layout.
-	D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
-	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
-	};
-
-	HR( md3dDevice->CreateInputLayout( vertexDesc, 2, mVSBlob->GetBufferPointer(), mVSBlob->GetBufferSize(), &mInputLayout ) );
-}
-
 void LightingApp::BuildRasterState()
 {
 	D3D11_RASTERIZER_DESC rs;
@@ -360,7 +341,7 @@ void LightingApp::BuildWireFrameRasterState()
 	HR( md3dDevice->CreateRasterizerState( &wireframeDesc, &mRasterState ) );
 }
 
-bool LightingApp::ImportMeshFromFile( const std::string & filename, std::vector<Vertex>** vertices, std::vector<UINT>** indices )
+bool LightingApp::ImportMeshFromFile( const std::string & filename, std::vector<Vertex::PosNormal>** vertices, std::vector<UINT>** indices )
 {
 	wchar_t msg[256];
 
@@ -380,7 +361,7 @@ bool LightingApp::ImportMeshFromFile( const std::string & filename, std::vector<
 	swprintf_s( msg, 256, L"  %i vertices in mesh[0]\n", mesh->mNumVertices );
 	OutputDebugString( msg );
 
-	*vertices = new std::vector<Vertex>( static_cast<size_t>( mesh->mNumVertices ) );
+	*vertices = new std::vector<Vertex::PosNormal>( static_cast<size_t>( mesh->mNumVertices ) );
 
 	if ( mesh->HasPositions() )
 	{

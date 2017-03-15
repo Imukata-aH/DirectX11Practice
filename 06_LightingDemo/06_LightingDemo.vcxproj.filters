@@ -54,6 +54,9 @@
     <ClCompile Include="..\Common\ShaderHelper.cpp">
       <Filter>common</Filter>
     </ClCompile>
+    <ClCompile Include="Vertex.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\Batch.h">
@@ -97,6 +100,9 @@
     </ClInclude>
     <ClInclude Include="cbPerFrame.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Vertex.h">
+      <Filter>common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -177,6 +177,10 @@ copy /Y "$(SolutionDir)\Common\meshes\suzanne.obj" "$(TargetDir)"</Command>
     <ClCompile Include="..\Common\Model.cpp" />
     <ClCompile Include="..\Common\ShaderHelper.cpp" />
     <ClCompile Include="LightingDemo.cpp" />
+    <ClCompile Include="Vertex.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\Batch.h" />
@@ -191,6 +195,10 @@ copy /Y "$(SolutionDir)\Common\meshes\suzanne.obj" "$(TargetDir)"</Command>
     <ClInclude Include="..\Common\MathHelper.h" />
     <ClInclude Include="..\Common\Model.h" />
     <ClInclude Include="..\Common\ShaderHelper.h" />
+    <ClInclude Include="Vertex.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <FxCompile Include="..\Common\shader\LightHelper.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
