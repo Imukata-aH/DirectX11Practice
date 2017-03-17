@@ -40,7 +40,11 @@ public:
 	void SetDirectionalLights( DirectionalLight lights ) { mConstantsPerFrame.mDirLights = lights; }
 	void SetEyePosWorld( XMFLOAT3 eyePos ) { mConstantsPerFrame.mEyePosW = eyePos; }
 
-	void ApplyChanges( ID3D11DeviceContext* deviceContext );
+	void ApplyPerObjectChanges( ID3D11DeviceContext* deviceContext );
+	void ApplyPerFrameChanges( ID3D11DeviceContext* deviceContext );
+
+	ID3D11Buffer* GetPerFrameBuffer() const;
+	ID3D11Buffer* GetPerObjectBuffer() const;
 
 private:
 	struct ConstantsPerObjectBasic

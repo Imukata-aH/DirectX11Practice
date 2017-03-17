@@ -39,19 +39,34 @@ Effect::~Effect()
 BasicEffect::BasicEffect( ID3D11Device* device, const char* vsFilename, const char* psFilename ) :
 	Effect( device, vsFilename, psFilename )
 {
+	mCBPerFrame.Initialize( device );
+	mCBPerObject.Initialize( device );
 }
 
 BasicEffect::~BasicEffect()
 {
 }
 
-void BasicEffect::ApplyChanges( ID3D11DeviceContext* deviceContext )
+void BasicEffect::ApplyPerObjectChanges( ID3D11DeviceContext* deviceContext )
+{
+	mCBPerObject.Data = mConstantsPerObject;
+	mCBPerObject.ApplyChanges( deviceContext );
+}
+
+void BasicEffect::ApplyPerFrameChanges( ID3D11DeviceContext* deviceContext )
 {
 	mCBPerFrame.Data = mConstantsPerFrame;
 	mCBPerFrame.ApplyChanges( deviceContext );
+}
 
-	mCBPerObject.Data = mConstantsPerObject;
-	mCBPerObject.ApplyChanges( deviceContext );
+ID3D11Buffer* BasicEffect::GetPerFrameBuffer() const
+{
+	return mCBPerFrame.Buffer();
+}
+
+ID3D11Buffer* BasicEffect::GetPerObjectBuffer() const
+{
+	return mCBPerObject.Buffer();
 }
 
 #pragma endregion

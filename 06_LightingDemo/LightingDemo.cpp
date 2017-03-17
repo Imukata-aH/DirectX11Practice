@@ -1,4 +1,4 @@
-#include <string>
+﻿#include <string>
 
 #include "d3dApp.h"
 #include "d3dUtil.h"
@@ -13,6 +13,7 @@
 #include "LightHelper.h"
 #include "cbPerFrame.h"
 #include "Vertex.h"
+#include "Effects.h"
 
 // Assimp
 #include "Importer.hpp"
@@ -45,11 +46,9 @@ private:
 	void BuildRasterState();
 	void BuildWireFrameRasterState();
 
-	bool ImportMeshFromFile( const std::string & filename, std::vector<Vertex::PosNormal>** vertices, std::vector<UINT>** indices );
+	bool ImportMeshFromFile( const std::string & filename, ID3D11Buffer** vertexBuffer, ID3D11Buffer** indexBuffer, UINT* indexCount );
 
 private:
-	ConstantBuffer<ConstantsPerObject> mObjectConstantBuffer;
-	ConstantBuffer<ConstantsPerFrame> mFrameConstantBuffer;
 	ID3DBlob* mPSBlob;
 	ID3DBlob* mVSBlob;
 	ID3D11PixelShader* mPixelShader;
@@ -59,7 +58,11 @@ private:
 	XMFLOAT4X4 mView;
 	XMFLOAT4X4 mProj;
 
-	Model* m_importedMeshModel;
+	ID3D11Buffer* mMonkeyVB;
+	ID3D11Buffer* mMonkeyIB;
+	UINT mMonkeyIndexCount;
+	XMFLOAT4X4 mMonkeyWorldMat;
+	Material mMonkeyMaterial;
 	
 	DirectionalLight mDirLight;
 	PointLight mPointLight;
@@ -117,15 +120,18 @@ LightingApp::LightingApp( HINSTANCE hInstance )
 
 	mLastMousePos.x = 0;
 	mLastMousePos.y = 0;
+
+	mMonkeyMaterial.Ambient = XMFLOAT4( 0.48f, 0.77f, 0.46f, 1.0f );
+	mMonkeyMaterial.Diffuse = XMFLOAT4( 0.48f, 0.77f, 0.46f, 1.0f );
+	mMonkeyMaterial.Specular = XMFLOAT4( 0.2f, 0.2f, 0.2f, 16.0f );
+
+	XMStoreFloat4x4( &mMonkeyWorldMat, XMMatrixIdentity() );
 }
 
 LightingApp::~LightingApp()
 {
-	m_importedMeshModel->Release();
-	delete m_importedMeshModel;
-	m_importedMeshModel = 0;
-
 	InputLayouts::DestroyAll();
+	Effects::DestroyAll();
 	ReleaseCOM( mPSBlob );
 	ReleaseCOM( mVSBlob );
 	ReleaseCOM( md3dImmediateContext );
@@ -140,13 +146,11 @@ bool LightingApp::Init()
 	BuildGeometryBuffers();
 	BuildFX();
 
+	Effects::InitAll( md3dDevice );
 	InputLayouts::InitAll( md3dDevice, mVSBlob );
 
 	BuildRasterState();
 	//BuildWireFrameRasterState();
-
-	mObjectConstantBuffer.Initialize( md3dDevice );
-	mFrameConstantBuffer.Initialize( md3dDevice );
 
 	return true;
 }
@@ -198,18 +202,6 @@ void LightingApp::DrawScene()
 	md3dImmediateContext->ClearRenderTargetView( mRenderTargetView, reinterpret_cast<const float*>( &Colors::LightSteelBlue ) );
 	md3dImmediateContext->ClearDepthStencilView( mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0 );
 
-	// Apply lights data
-	ConstantsPerFrame cbPerFrame;
-	cbPerFrame.mDirLight = mDirLight;
-	cbPerFrame.mPointLight = mPointLight;
-	cbPerFrame.mSpotLight = mSpotLight;
-	cbPerFrame.mEyePosW = mEyePosW;
-	mFrameConstantBuffer.Data = cbPerFrame;
-	mFrameConstantBuffer.ApplyChanges( md3dImmediateContext );
-
-	auto buffer = mFrameConstantBuffer.Buffer();
-	md3dImmediateContext->PSSetConstantBuffers( 1, 1, &buffer );
-
 	// Set vertex and pixel shaders
 	md3dImmediateContext->PSSetShader( mPixelShader, NULL, 0 );
 	md3dImmediateContext->VSSetShader( mVertexShader, NULL, 0 );
@@ -217,11 +209,58 @@ void LightingApp::DrawScene()
 	// Set raster state
 	md3dImmediateContext->RSSetState( mRasterState );
 
+	// Set per frame constants
+	Effects::BasicFX->SetDirectionalLights( mDirLight );
+	Effects::BasicFX->SetEyePosWorld( mEyePosW );
+
+	Effects::BasicFX->ApplyPerFrameChanges( md3dImmediateContext );
+
+	//
+	// インポートしたモデルの描画
+	//
+	
+	// 頂点バッファのセット
+	UINT stride = sizeof( Vertex::PosNormal );
+	UINT offset = 0;
+	md3dImmediateContext->IASetVertexBuffers( 0, 1, &mMonkeyVB, &stride, &offset );
+
+	// インデックスバッファのセット
+	md3dImmediateContext->IASetIndexBuffer( mMonkeyIB, DXGI_FORMAT_R32_UINT, 0 );
+
+	// Calculate and set per object constants
+
 	XMMATRIX view = XMLoadFloat4x4( &mView );
 	XMMATRIX proj = XMLoadFloat4x4( &mProj );
-	XMMATRIX viewProj = view*proj;
 
-	m_importedMeshModel->Draw( viewProj, &mObjectConstantBuffer );
+	XMMATRIX world = XMLoadFloat4x4( &mMonkeyWorldMat );
+	XMMATRIX worldInvTranspose = MathHelper::InverseTranspose( world );
+	XMMATRIX worldViewProj = world*view*proj;
+
+	// Transpose before set to effects
+	XMFLOAT4X4 worldTransposed;
+	XMFLOAT4X4 worldITTransposed;
+	XMFLOAT4X4 wvpTransposed;
+	XMStoreFloat4x4( &worldTransposed, XMMatrixTranspose( world ) );
+	XMStoreFloat4x4( &worldITTransposed, XMMatrixTranspose( worldInvTranspose ) );
+	XMStoreFloat4x4( &wvpTransposed, XMMatrixTranspose( worldViewProj ) );
+
+	Effects::BasicFX->SetWorldMatrix( worldTransposed );
+	Effects::BasicFX->SetWorldInvTransposeMatrix( worldITTransposed );
+	Effects::BasicFX->SetWorldViewProjMatrix( wvpTransposed );
+	Effects::BasicFX->SetMaterial( mMonkeyMaterial );
+
+	Effects::BasicFX->ApplyPerObjectChanges( md3dImmediateContext );
+
+	auto perFrameBuffer = Effects::BasicFX->GetPerFrameBuffer();
+	auto perObjectBuffer = Effects::BasicFX->GetPerObjectBuffer();
+
+	// Set constant buffers
+	md3dImmediateContext->VSSetConstantBuffers( 0, 1, &perObjectBuffer );
+	md3dImmediateContext->PSSetConstantBuffers( 0, 1, &perObjectBuffer );
+	md3dImmediateContext->PSSetConstantBuffers( 1, 1, &perFrameBuffer );
+
+	// 描画
+	md3dImmediateContext->DrawIndexed( mMonkeyIndexCount, 0, 0 );
 
 	HR( mSwapChain->Present( 0, 0 ) );
 }
@@ -273,33 +312,11 @@ void LightingApp::OnMouseMove( WPARAM btnState, int x, int y )
 
 void LightingApp::BuildGeometryBuffers()
 {
-	std::vector<Vertex::PosNormal>* vertices = nullptr;
-	std::vector<UINT>* indices = nullptr;
-	bool result = ImportMeshFromFile( MESH_FILE, &vertices, &indices );
+	bool result = ImportMeshFromFile( MESH_FILE, &mMonkeyVB, &mMonkeyIB, &mMonkeyIndexCount );
 	if ( !result )
 	{
 		OutputDebugString( L"Reading mesh file failed.\n" );
 	}
-
-	ID3D11Buffer* vertexBuffer = nullptr;
-	ID3D11Buffer* indexBuffer = nullptr;
-
-	BufferHelper<Vertex::PosNormal>::CreateVertexBuffer( &md3dDevice, *vertices, &vertexBuffer );
-	BufferHelper<UINT>::CreateIndexBuffer( &md3dDevice, *indices, &indexBuffer );
-
-	Material material;
-	material.Ambient = XMFLOAT4( 0.48f, 0.77f, 0.46f, 1.0f );
-	material.Diffuse = XMFLOAT4( 0.48f, 0.77f, 0.46f, 1.0f );
-	material.Specular = XMFLOAT4( 0.2f, 0.2f, 0.2f, 16.0f );
-
-	Batch* importexMeshBatch = new Batch( &md3dDevice, &md3dImmediateContext, vertexBuffer, indexBuffer, indices->size(), sizeof( Vertex::PosNormal ), 0, material );
-	m_importedMeshModel = new Model( importexMeshBatch );
-
-	delete vertices;
-	vertices = 0;
-
-	delete indices;
-	indices = 0;
 }
 
 void LightingApp::BuildFX()
@@ -341,7 +358,7 @@ void LightingApp::BuildWireFrameRasterState()
 	HR( md3dDevice->CreateRasterizerState( &wireframeDesc, &mRasterState ) );
 }
 
-bool LightingApp::ImportMeshFromFile( const std::string & filename, std::vector<Vertex::PosNormal>** vertices, std::vector<UINT>** indices )
+bool LightingApp::ImportMeshFromFile( const std::string & filename, ID3D11Buffer** vertexBuffer, ID3D11Buffer** indexBuffer, UINT* indexCount )
 {
 	wchar_t msg[256];
 
@@ -361,14 +378,14 @@ bool LightingApp::ImportMeshFromFile( const std::string & filename, std::vector<
 	swprintf_s( msg, 256, L"  %i vertices in mesh[0]\n", mesh->mNumVertices );
 	OutputDebugString( msg );
 
-	*vertices = new std::vector<Vertex::PosNormal>( static_cast<size_t>( mesh->mNumVertices ) );
+	std::vector<Vertex::PosNormal> vertices = std::vector<Vertex::PosNormal>( static_cast<size_t>( mesh->mNumVertices ) );
 
 	if ( mesh->HasPositions() )
 	{
 		for ( int i = 0; i < mesh->mNumVertices; i++ )
 		{
 			const aiVector3D* pos = &( mesh->mVertices[i] );
-			( **vertices )[i].Position = XMFLOAT3( pos->x, pos->y, pos->z );
+			vertices[i].Position = XMFLOAT3( pos->x, pos->y, pos->z );
 		}
 	}
 
@@ -377,21 +394,25 @@ bool LightingApp::ImportMeshFromFile( const std::string & filename, std::vector<
 		for ( int i = 0; i < mesh->mNumVertices; i++ )
 		{
 			const aiVector3D* normal = &( mesh->mNormals[i] );
-			( **vertices )[i].Normal = XMFLOAT3( normal->x, normal->y, normal->z );
+			vertices[i].Normal = XMFLOAT3( normal->x, normal->y, normal->z );
 		}
 	}
 
-	*indices = new std::vector<UINT>( mesh->mNumFaces * 3 );
+	std::vector<UINT> indices = std::vector<UINT>( mesh->mNumFaces * 3 );
 	for ( int i = 0; i < mesh->mNumFaces; i++ )
 	{
 		const aiFace& face = mesh->mFaces[i];
 		assert( face.mNumIndices == 3 );
-		( **indices )[( i * 3 ) + 0] = face.mIndices[0];
-		( **indices )[( i * 3 ) + 1] = face.mIndices[1];
-		( **indices )[( i * 3 ) + 2] = face.mIndices[2];
+		indices[( i * 3 ) + 0] = face.mIndices[0];
+		indices[( i * 3 ) + 1] = face.mIndices[1];
+		indices[( i * 3 ) + 2] = face.mIndices[2];
 	}
+	*indexCount = static_cast<UINT>( indices.size() );
 
 	swprintf_s( msg, 256, L"Complete reading mesh %s\n", filename );
+
+	BufferHelper<Vertex::PosNormal>::CreateVertexBuffer( &md3dDevice, vertices, vertexBuffer );
+	BufferHelper<UINT>::CreateIndexBuffer( &md3dDevice, indices, indexBuffer );
 
 	return true;
 }
