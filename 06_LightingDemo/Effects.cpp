@@ -78,8 +78,11 @@ void BasicEffect::SetPerObjectData( ID3D11DeviceContext* deviceContext, DirectX:
 	ApplyPerObjectChanges( deviceContext );
 }
 
-void BasicEffect::Render( ID3D11DeviceContext* deviceContext )
+void BasicEffect::Render( ID3D11DeviceContext* deviceContext, ID3D11InputLayout* inputLayout )
 {
+	// Set input layout
+	deviceContext->IASetInputLayout( inputLayout );
+
 	// Set vertex and pixel shaders
 	SetVertexShader( deviceContext );
 	SetPixelShader( deviceContext );

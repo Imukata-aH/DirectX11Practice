@@ -40,7 +40,7 @@ public:
 
 	void SetPerFrameData( ID3D11DeviceContext* deviceContext, DirectionalLight& dirLight, XMFLOAT3& eyePosW );
 	void SetPerObjectData( ID3D11DeviceContext* deviceContext, DirectX::XMFLOAT4X4& world, DirectX::XMFLOAT4X4& view, DirectX::XMFLOAT4X4& proj, Material& material );
-	void Render( ID3D11DeviceContext* deviceContext );
+	void Render( ID3D11DeviceContext* deviceContext, ID3D11InputLayout* inputLayout );
 
 private:
 	void SetWorldMatrix( DirectX::XMFLOAT4X4&  world );

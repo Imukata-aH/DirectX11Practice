@@ -188,7 +188,6 @@ void LightingApp::UpdateScene( float dt )
 
 void LightingApp::DrawScene()
 {
-	md3dImmediateContext->IASetInputLayout( InputLayouts::PosNormal );
 	md3dImmediateContext->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
 
 	md3dImmediateContext->ClearRenderTargetView( mRenderTargetView, reinterpret_cast<const float*>( &Colors::LightSteelBlue ) );
@@ -202,7 +201,7 @@ void LightingApp::DrawScene()
 
 	// Set up rendering effect
 	Effects::BasicFX->SetPerObjectData( md3dImmediateContext, mMonkeyWorldMat, mView, mProj, mMonkeyMaterial );
-	Effects::BasicFX->Render( md3dImmediateContext );
+	Effects::BasicFX->Render( md3dImmediateContext, InputLayouts::PosNormal );
 
 	// 頂点バッファのセット
 	UINT stride = sizeof( Vertex::PosNormal );
