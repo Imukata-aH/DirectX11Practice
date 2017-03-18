@@ -38,13 +38,18 @@ public:
 	BasicEffect( ID3D11Device* device, const char* vsFilename, const char* psFilename );
 	~BasicEffect();
 
-	void SetWorldMatrix( DirectX::XMFLOAT4X4  world ) { mConstantsPerObject.m_World = world; }
-	void SetWorldInvTransposeMatrix( DirectX::XMFLOAT4X4  wordInvT ) { mConstantsPerObject.m_WorldInvTranspose = wordInvT; }
-	void SetWorldViewProjMatrix( DirectX::XMFLOAT4X4  wvp ) { mConstantsPerObject.m_WorldViewProj = wvp; }
-	void SetMaterial( Material material ) { mConstantsPerObject.mMaterial = material; }
+	void SetPerFrameData( ID3D11DeviceContext* deviceContext, DirectionalLight& dirLight, XMFLOAT3& eyePosW );
+	void SetPerObjectData( ID3D11DeviceContext* deviceContext, DirectX::XMFLOAT4X4& world, DirectX::XMFLOAT4X4& view, DirectX::XMFLOAT4X4& proj, Material& material );
+	void Render( ID3D11DeviceContext* deviceContext );
+
+private:
+	void SetWorldMatrix( DirectX::XMFLOAT4X4&  world );
+	void SetWorldInvTransposeMatrix( DirectX::XMFLOAT4X4&  world);
+	void SetWorldViewProjMatrix( DirectX::XMFLOAT4X4& world, DirectX::XMFLOAT4X4& view, DirectX::XMFLOAT4X4& proj );
+	void SetMaterial( Material& material );
 	
-	void SetDirectionalLights( DirectionalLight lights ) { mConstantsPerFrame.mDirLights = lights; }
-	void SetEyePosWorld( XMFLOAT3 eyePos ) { mConstantsPerFrame.mEyePosW = eyePos; }
+	void SetDirectionalLights( DirectionalLight& lights );
+	void SetEyePosWorld( XMFLOAT3& eyePos );
 
 	void ApplyPerObjectChanges( ID3D11DeviceContext* deviceContext );
 	void ApplyPerFrameChanges( ID3D11DeviceContext* deviceContext );

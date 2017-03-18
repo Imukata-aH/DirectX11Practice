@@ -1,5 +1,8 @@
 ﻿#include "Effects.h"
 #include "ShaderHelper.h"
+#include "MathHelper.h"
+using namespace DirectX;
+using namespace DirectX::PackedVector;
 
 #pragma region Effect
 
@@ -55,6 +58,75 @@ BasicEffect::BasicEffect( ID3D11Device* device, const char* vsFilename, const ch
 
 BasicEffect::~BasicEffect()
 {
+}
+
+void BasicEffect::SetPerFrameData( ID3D11DeviceContext* deviceContext, DirectionalLight& dirLight, XMFLOAT3& eyePosW )
+{
+	SetDirectionalLights( dirLight );
+	SetEyePosWorld( eyePosW );
+
+	ApplyPerFrameChanges( deviceContext );
+}
+
+void BasicEffect::SetPerObjectData( ID3D11DeviceContext* deviceContext, DirectX::XMFLOAT4X4& world, DirectX::XMFLOAT4X4& view, DirectX::XMFLOAT4X4& proj, Material& material )
+{
+	SetWorldMatrix( world );
+	SetWorldInvTransposeMatrix( world );
+	SetWorldViewProjMatrix( world, view, proj );
+	SetMaterial( material );
+
+	ApplyPerObjectChanges( deviceContext );
+}
+
+void BasicEffect::Render( ID3D11DeviceContext* deviceContext )
+{
+	// Set vertex and pixel shaders
+	SetVertexShader( deviceContext );
+	SetPixelShader( deviceContext );
+
+	auto perFrameBuffer = GetPerFrameBuffer();
+	auto perObjectBuffer = GetPerObjectBuffer();
+
+	deviceContext->VSSetConstantBuffers( 0, 1, &perObjectBuffer );
+	deviceContext->PSSetConstantBuffers( 0, 1, &perObjectBuffer );
+	deviceContext->PSSetConstantBuffers( 1, 1, &perFrameBuffer );
+}
+
+void BasicEffect::SetWorldMatrix( DirectX::XMFLOAT4X4&  world )
+{
+	XMStoreFloat4x4( &mConstantsPerObject.m_World, XMMatrixTranspose( XMLoadFloat4x4( &world ) ) );
+}
+
+void BasicEffect::SetWorldInvTransposeMatrix( DirectX::XMFLOAT4X4&  world )
+{
+	XMMATRIX worldMat = XMLoadFloat4x4( &world );
+	XMMATRIX worldInvTranspose = MathHelper::InverseTranspose( worldMat );
+	XMStoreFloat4x4( &mConstantsPerObject.m_WorldInvTranspose, XMMatrixTranspose( worldInvTranspose ) );
+}
+
+void BasicEffect::SetWorldViewProjMatrix( DirectX::XMFLOAT4X4& world, DirectX::XMFLOAT4X4& view, DirectX::XMFLOAT4X4& proj )
+{
+	XMMATRIX worldMat = XMLoadFloat4x4( &world );
+	XMMATRIX viewMat = XMLoadFloat4x4( &view );
+	XMMATRIX projMat = XMLoadFloat4x4( &proj );
+	XMMATRIX worldViewProj = worldMat*viewMat*projMat;
+
+	XMStoreFloat4x4( &mConstantsPerObject.m_WorldViewProj, XMMatrixTranspose( worldViewProj ) );
+}
+
+void BasicEffect::SetMaterial( Material& material )
+{
+	mConstantsPerObject.mMaterial = material;
+}
+
+void BasicEffect::SetDirectionalLights( DirectionalLight& lights )
+{
+	mConstantsPerFrame.mDirLights = lights;
+}
+
+void BasicEffect::SetEyePosWorld( XMFLOAT3& eyePos )
+{
+	mConstantsPerFrame.mEyePosW = eyePos;
 }
 
 void BasicEffect::ApplyPerObjectChanges( ID3D11DeviceContext* deviceContext )
