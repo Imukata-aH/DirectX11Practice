@@ -46,6 +46,7 @@ private:
 	void BuildWireFrameRasterState();
 
 	bool ImportMeshFromFile( const std::string & filename, ID3D11Buffer** vertexBuffer, ID3D11Buffer** indexBuffer, UINT* indexCount );
+	void CalculateMatrixForConstantBuffer( XMFLOAT4X4& inWorld, XMFLOAT4X4& inView, XMFLOAT4X4& inProj, XMFLOAT4X4* outWorld, XMFLOAT4X4* outWorldInverseTranspose, XMFLOAT4X4* outWoldViewProj );
 
 private:
 	ID3D11RasterizerState* mRasterState;
@@ -207,9 +208,9 @@ void LightingApp::DrawScene()
 
 	Effects::BasicFX->ApplyPerFrameChanges( md3dImmediateContext );
 
-	//
-	// インポートしたモデルの描画
-	//
+	/////////////////////////
+	// モデルの描画
+	/////////////////////////
 	
 	// 頂点バッファのセット
 	UINT stride = sizeof( Vertex::PosNormal );
@@ -220,33 +221,21 @@ void LightingApp::DrawScene()
 	md3dImmediateContext->IASetIndexBuffer( mMonkeyIB, DXGI_FORMAT_R32_UINT, 0 );
 
 	// Calculate and set per object constants
+	XMFLOAT4X4 world, worldInvTranspose, wvp;
+	CalculateMatrixForConstantBuffer( mMonkeyWorldMat, mView, mProj, &world, &worldInvTranspose, &wvp );
 
-	XMMATRIX view = XMLoadFloat4x4( &mView );
-	XMMATRIX proj = XMLoadFloat4x4( &mProj );
-
-	XMMATRIX world = XMLoadFloat4x4( &mMonkeyWorldMat );
-	XMMATRIX worldInvTranspose = MathHelper::InverseTranspose( world );
-	XMMATRIX worldViewProj = world*view*proj;
-
-	// Transpose before set to effects
-	XMFLOAT4X4 worldTransposed;
-	XMFLOAT4X4 worldITTransposed;
-	XMFLOAT4X4 wvpTransposed;
-	XMStoreFloat4x4( &worldTransposed, XMMatrixTranspose( world ) );
-	XMStoreFloat4x4( &worldITTransposed, XMMatrixTranspose( worldInvTranspose ) );
-	XMStoreFloat4x4( &wvpTransposed, XMMatrixTranspose( worldViewProj ) );
-
-	Effects::BasicFX->SetWorldMatrix( worldTransposed );
-	Effects::BasicFX->SetWorldInvTransposeMatrix( worldITTransposed );
-	Effects::BasicFX->SetWorldViewProjMatrix( wvpTransposed );
+	Effects::BasicFX->SetWorldMatrix( world );
+	Effects::BasicFX->SetWorldInvTransposeMatrix( worldInvTranspose );
+	Effects::BasicFX->SetWorldViewProjMatrix( wvp );
+	
 	Effects::BasicFX->SetMaterial( mMonkeyMaterial );
 
 	Effects::BasicFX->ApplyPerObjectChanges( md3dImmediateContext );
 
+	// Set constant buffers
 	auto perFrameBuffer = Effects::BasicFX->GetPerFrameBuffer();
 	auto perObjectBuffer = Effects::BasicFX->GetPerObjectBuffer();
 
-	// Set constant buffers
 	md3dImmediateContext->VSSetConstantBuffers( 0, 1, &perObjectBuffer );
 	md3dImmediateContext->PSSetConstantBuffers( 0, 1, &perObjectBuffer );
 	md3dImmediateContext->PSSetConstantBuffers( 1, 1, &perFrameBuffer );
@@ -255,6 +244,23 @@ void LightingApp::DrawScene()
 	md3dImmediateContext->DrawIndexed( mMonkeyIndexCount, 0, 0 );
 
 	HR( mSwapChain->Present( 0, 0 ) );
+}
+
+void LightingApp::CalculateMatrixForConstantBuffer( XMFLOAT4X4& inWorld, XMFLOAT4X4& inView, XMFLOAT4X4& inProj, XMFLOAT4X4* outWorld, XMFLOAT4X4* outWorldInverseTranspose, XMFLOAT4X4* outWoldViewProj )
+{
+	XMMATRIX view = XMLoadFloat4x4( &inView );
+	XMMATRIX proj = XMLoadFloat4x4( &inProj );
+
+	XMMATRIX world = XMLoadFloat4x4( &inWorld );
+	XMMATRIX worldInvTranspose = MathHelper::InverseTranspose( world );
+	XMMATRIX worldViewProj = world*view*proj;
+
+	// Transpose before set to effects
+	XMStoreFloat4x4( outWorld, XMMatrixTranspose( world ) );
+	XMStoreFloat4x4( outWorldInverseTranspose, XMMatrixTranspose( worldInvTranspose ) );
+	XMStoreFloat4x4( outWoldViewProj, XMMatrixTranspose( worldViewProj ) );
+
+
 }
 
 void LightingApp::OnMouseDown( WPARAM btnState, int x, int y )
