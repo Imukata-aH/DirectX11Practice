@@ -2,16 +2,9 @@
 
 #include "d3dApp.h"
 #include "d3dUtil.h"
-#include "MathHelper.h"
 #include "DirectXColors.h"
-#include "ConstantBuffer.h"
-#include "ShaderHelper.h"
-#include "GeometryGenerator.h"
-#include "Batch.h"
-#include "Model.h"
 #include "BufferHelper.h"
 #include "LightHelper.h"
-#include "cbPerFrame.h"
 #include "Vertex.h"
 #include "Effects.h"
 
