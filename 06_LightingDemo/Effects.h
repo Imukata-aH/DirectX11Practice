@@ -11,6 +11,12 @@ public:
 	Effect( ID3D11Device* device, const char* vsFilename, const char* psFilename );
 	virtual ~Effect();
 
+	void SetVertexShader( ID3D11DeviceContext* deviceContext );
+	void SetPixelShader( ID3D11DeviceContext* deviceContext );
+
+	ID3DBlob* GetPSBlob() { return mPSBlob; }
+	ID3DBlob* GetVSBlob() { return mVSBlob; }
+
 private:
 	Effect( const Effect& other ) {};
 	Effect& operator=( const Effect& other ) {};

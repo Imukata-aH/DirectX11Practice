@@ -42,17 +42,12 @@ public:
 
 private:
 	void BuildGeometryBuffers();
-	void BuildFX();
 	void BuildRasterState();
 	void BuildWireFrameRasterState();
 
 	bool ImportMeshFromFile( const std::string & filename, ID3D11Buffer** vertexBuffer, ID3D11Buffer** indexBuffer, UINT* indexCount );
 
 private:
-	ID3DBlob* mPSBlob;
-	ID3DBlob* mVSBlob;
-	ID3D11PixelShader* mPixelShader;
-	ID3D11VertexShader* mVertexShader;
 	ID3D11RasterizerState* mRasterState;
 
 	XMFLOAT4X4 mView;
@@ -132,8 +127,6 @@ LightingApp::~LightingApp()
 {
 	InputLayouts::DestroyAll();
 	Effects::DestroyAll();
-	ReleaseCOM( mPSBlob );
-	ReleaseCOM( mVSBlob );
 	ReleaseCOM( md3dImmediateContext );
 	ReleaseCOM( md3dDevice );
 }
@@ -144,10 +137,9 @@ bool LightingApp::Init()
 		return false;
 
 	BuildGeometryBuffers();
-	BuildFX();
 
 	Effects::InitAll( md3dDevice );
-	InputLayouts::InitAll( md3dDevice, mVSBlob );
+	InputLayouts::InitAll( md3dDevice, Effects::BasicFX->GetVSBlob() );
 
 	BuildRasterState();
 	//BuildWireFrameRasterState();
@@ -203,8 +195,8 @@ void LightingApp::DrawScene()
 	md3dImmediateContext->ClearDepthStencilView( mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0 );
 
 	// Set vertex and pixel shaders
-	md3dImmediateContext->PSSetShader( mPixelShader, NULL, 0 );
-	md3dImmediateContext->VSSetShader( mVertexShader, NULL, 0 );
+	Effects::BasicFX->SetVertexShader( md3dImmediateContext );
+	Effects::BasicFX->SetPixelShader( md3dImmediateContext );
 
 	// Set raster state
 	md3dImmediateContext->RSSetState( mRasterState );
@@ -317,22 +309,6 @@ void LightingApp::BuildGeometryBuffers()
 	{
 		OutputDebugString( L"Reading mesh file failed.\n" );
 	}
-}
-
-void LightingApp::BuildFX()
-{
-	DWORD shaderFlags = 0;
-#if defined( DEBUG ) || defined( _DEBUG )
-	shaderFlags |= D3D10_SHADER_DEBUG;
-	shaderFlags |= D3D10_SHADER_SKIP_OPTIMIZATION;
-#endif
-
-	// Load cso files and create shaders
-	HR( ShaderHelper::LoadCompiledShader( "LightingPixelShader.cso", &mPSBlob ) );
-	HR( md3dDevice->CreatePixelShader( mPSBlob->GetBufferPointer(), mPSBlob->GetBufferSize(), NULL, &mPixelShader ) );
-
-	HR( ShaderHelper::LoadCompiledShader( "LightingVertexShader.cso", &mVSBlob ) );
-	HR( md3dDevice->CreateVertexShader( mVSBlob->GetBufferPointer(), mVSBlob->GetBufferSize(), NULL, &mVertexShader ) );
 }
 
 void LightingApp::BuildRasterState()

@@ -32,6 +32,16 @@ Effect::~Effect()
 	ReleaseCOM( mVertexShader );
 }
 
+void Effect::SetVertexShader( ID3D11DeviceContext* deviceContext )
+{
+	deviceContext->VSSetShader( mVertexShader, NULL, 0 );
+}
+
+void Effect::SetPixelShader( ID3D11DeviceContext* deviceContext )
+{
+	deviceContext->PSSetShader( mPixelShader, NULL, 0 );
+}
+
 #pragma endregion
 
 #pragma region BasicEffect
