@@ -34,11 +34,11 @@ float4 main(VertexOut pin) : SV_TARGET
 	{
 		float4 A, D, S;
 		ComputeDirectionalLight(pin.NormalW, gDirLight[i], gMaterial, toEyeW, A, D, S);
-		ambient += A;
-		diffuse += D;
-		specular += S;
+		// Use pad to determine lights strength
+		ambient += A * gDirLight[i].pad;
+		diffuse += D * gDirLight[i].pad;
+		specular += S * gDirLight[i].pad;
 	}
-
 
 	return ambient + diffuse + specular;
 }

@@ -52,8 +52,10 @@ private:
 	XMFLOAT4X4 mMonkeyWorldMat;
 	Material mMonkeyMaterial;
 	
-	std::vector<DirectionalLight> mDirLights;
+	std::vector<DirectionalLight> mDirLights = std::vector<DirectionalLight>(3);
 	XMFLOAT3 mEyePosW;
+
+	std::vector<bool> mEnableDirLights = std::vector<bool>(3);
 
 	float mTheta;
 	float mPhi;
@@ -88,23 +90,29 @@ LightingApp::LightingApp( HINSTANCE hInstance )
 	mLastMousePos.x = 0;
 	mLastMousePos.y = 0;
 
-	// Directional light.
-	mDirLights = std::vector<DirectionalLight>( 3 );
+	for ( size_t i = 0; i < mEnableDirLights.size(); i++ )
+	{
+		mEnableDirLights[i] = true;
+	}
 
+	// Directional light.
 	mDirLights[0].Ambient = XMFLOAT4( 0.2f, 0.2f, 0.2f, 1.0f );
 	mDirLights[0].Diffuse = XMFLOAT4( 0.5f, 0.5f, 0.5f, 1.0f );
 	mDirLights[0].Specular = XMFLOAT4( 0.5f, 0.5f, 0.5f, 1.0f );
 	mDirLights[0].Direction = XMFLOAT3( 0.57735f, -0.57735f, 0.57735f );
+	mDirLights[0].Pad = mEnableDirLights[0] ? 1.0f : 0.0f;
 
 	mDirLights[1].Ambient = XMFLOAT4( 0.0f, 0.0f, 0.0f, 1.0f );
 	mDirLights[1].Diffuse = XMFLOAT4( 0.20f, 0.20f, 0.20f, 1.0f );
 	mDirLights[1].Specular = XMFLOAT4( 0.25f, 0.25f, 0.25f, 1.0f );
 	mDirLights[1].Direction = XMFLOAT3( -0.57735f, -0.57735f, 0.57735f );
+	mDirLights[1].Pad = mEnableDirLights[1] ? 1.0f : 0.0f;
 
 	mDirLights[2].Ambient = XMFLOAT4( 0.0f, 0.0f, 0.0f, 1.0f );
 	mDirLights[2].Diffuse = XMFLOAT4( 0.2f, 0.2f, 0.2f, 1.0f );
 	mDirLights[2].Specular = XMFLOAT4( 0.0f, 0.0f, 0.0f, 1.0f );
 	mDirLights[2].Direction = XMFLOAT3( 0.0f, -0.707f, -0.707f );
+	mDirLights[2].Pad = mEnableDirLights[2] ? 1.0f : 0.0f;
 
 	// Material
 	mMonkeyMaterial.Ambient = XMFLOAT4( 0.48f, 0.77f, 0.46f, 1.0f );
@@ -165,6 +173,35 @@ void LightingApp::UpdateScene( float dt )
 
 	XMMATRIX V = XMMatrixLookAtLH( pos, target, up );
 	XMStoreFloat4x4( &mView, V );
+
+	// Update lights strength with button push
+	if ( GetAsyncKeyState( '0' ) & 0x8000 )
+	{
+		mEnableDirLights[0] = !mEnableDirLights[0];
+		mDirLights[0].Pad = mEnableDirLights[0] ? 1.0f : 0.0f;
+	}
+
+	if ( GetAsyncKeyState( '1' ) & 0x8000 )
+	{
+		mEnableDirLights[1] = !mEnableDirLights[1];
+		mDirLights[1].Pad = mEnableDirLights[1] ? 1.0f : 0.0f;
+	}
+
+	if ( GetAsyncKeyState( '2' ) & 0x8000 )
+	{
+		mEnableDirLights[2] = !mEnableDirLights[2];
+		mDirLights[2].Pad = mEnableDirLights[2] ? 1.0f : 0.0f;
+	}
+
+	if ( GetAsyncKeyState( '3' ) & 0x8000 )
+	{
+		// All lights enabled
+		for ( size_t i = 0; i < mDirLights.size(); i++ )
+		{
+			mEnableDirLights[i] = true;
+			mDirLights[i].Pad = 1.0f;
+		}
+	}
 }
 
 void LightingApp::DrawScene()
