@@ -38,7 +38,7 @@ public:
 	BasicEffect( ID3D11Device* device, const char* vsFilename, const char* psFilename );
 	~BasicEffect();
 
-	void SetPerFrameData( ID3D11DeviceContext* deviceContext, DirectionalLight& dirLight, XMFLOAT3& eyePosW );
+	void SetPerFrameData( ID3D11DeviceContext* deviceContext, std::vector<DirectionalLight>& lights, XMFLOAT3& eyePosW );
 	void SetPerObjectData( ID3D11DeviceContext* deviceContext, DirectX::XMFLOAT4X4& world, DirectX::XMFLOAT4X4& view, DirectX::XMFLOAT4X4& proj, Material& material );
 	void Render( ID3D11DeviceContext* deviceContext, ID3D11InputLayout* inputLayout );
 
@@ -48,7 +48,7 @@ private:
 	void SetWorldViewProjMatrix( DirectX::XMFLOAT4X4& world, DirectX::XMFLOAT4X4& view, DirectX::XMFLOAT4X4& proj );
 	void SetMaterial( Material& material );
 	
-	void SetDirectionalLights( DirectionalLight& lights );
+	void SetDirectionalLights( std::vector<DirectionalLight>& lights );
 	void SetEyePosWorld( XMFLOAT3& eyePos );
 
 	void ApplyPerObjectChanges( ID3D11DeviceContext* deviceContext );
@@ -68,7 +68,7 @@ private:
 
 	struct ConstantsPerFrameBasic
 	{
-		DirectionalLight mDirLights;
+		DirectionalLight mDirLights[3];
 		XMFLOAT3 mEyePosW;
 	};
 

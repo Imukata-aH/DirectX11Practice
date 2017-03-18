@@ -10,7 +10,7 @@ cbuffer cbPerObject : register(b0)
 
 cbuffer cbPerFrame : register(b1)
 {
-	DirectionalLight gDirLight;
+	DirectionalLight gDirLight[3];
 	float3 gEyePosW;
 }
 
@@ -29,12 +29,16 @@ float4 main(VertexOut pin) : SV_TARGET
 	
 	float3 toEyeW = normalize(gEyePosW - pin.PosW);
 
-	float4 A, D, S;
+	[unroll]
+	for (int i = 0; i < 3; i++)
+	{
+		float4 A, D, S;
+		ComputeDirectionalLight(pin.NormalW, gDirLight[i], gMaterial, toEyeW, A, D, S);
+		ambient += A;
+		diffuse += D;
+		specular += S;
+	}
 
-	ComputeDirectionalLight(pin.NormalW, gDirLight, gMaterial, toEyeW, A, D, S);
-	ambient += A;
-	diffuse += D;
-	specular += S;
 
 	return ambient + diffuse + specular;
 }

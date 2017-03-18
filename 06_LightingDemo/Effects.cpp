@@ -60,9 +60,9 @@ BasicEffect::~BasicEffect()
 {
 }
 
-void BasicEffect::SetPerFrameData( ID3D11DeviceContext* deviceContext, DirectionalLight& dirLight, XMFLOAT3& eyePosW )
+void BasicEffect::SetPerFrameData( ID3D11DeviceContext* deviceContext, std::vector<DirectionalLight>& lights, XMFLOAT3& eyePosW )
 {
-	SetDirectionalLights( dirLight );
+	SetDirectionalLights( lights );
 	SetEyePosWorld( eyePosW );
 
 	ApplyPerFrameChanges( deviceContext );
@@ -122,9 +122,9 @@ void BasicEffect::SetMaterial( Material& material )
 	mConstantsPerObject.mMaterial = material;
 }
 
-void BasicEffect::SetDirectionalLights( DirectionalLight& lights )
+void BasicEffect::SetDirectionalLights( std::vector<DirectionalLight>& lights )
 {
-	mConstantsPerFrame.mDirLights = lights;
+	memcpy(mConstantsPerFrame.mDirLights, &lights[0], sizeof(DirectionalLight) * lights.size());
 }
 
 void BasicEffect::SetEyePosWorld( XMFLOAT3& eyePos )

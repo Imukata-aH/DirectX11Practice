@@ -52,7 +52,7 @@ private:
 	XMFLOAT4X4 mMonkeyWorldMat;
 	Material mMonkeyMaterial;
 	
-	DirectionalLight mDirLight;
+	std::vector<DirectionalLight> mDirLights;
 	XMFLOAT3 mEyePosW;
 
 	float mTheta;
@@ -85,19 +85,33 @@ LightingApp::LightingApp( HINSTANCE hInstance )
 {
 	mMainWndCaption = L"Lighting Demo";
 
-	// Directional light.
-	mDirLight.Ambient = XMFLOAT4( 0.1f, 0.1f, 0.1f, 1.0f );
-	mDirLight.Diffuse = XMFLOAT4( 0.5f, 0.5f, 0.5f, 1.0f );
-	mDirLight.Specular = XMFLOAT4( 0.5f, 0.5f, 0.5f, 1.0f );
-	mDirLight.Direction = XMFLOAT3( 0.57735f, -0.57735f, 0.57735f );
-
 	mLastMousePos.x = 0;
 	mLastMousePos.y = 0;
 
+	// Directional light.
+	mDirLights = std::vector<DirectionalLight>( 3 );
+
+	mDirLights[0].Ambient = XMFLOAT4( 0.2f, 0.2f, 0.2f, 1.0f );
+	mDirLights[0].Diffuse = XMFLOAT4( 0.5f, 0.5f, 0.5f, 1.0f );
+	mDirLights[0].Specular = XMFLOAT4( 0.5f, 0.5f, 0.5f, 1.0f );
+	mDirLights[0].Direction = XMFLOAT3( 0.57735f, -0.57735f, 0.57735f );
+
+	mDirLights[1].Ambient = XMFLOAT4( 0.0f, 0.0f, 0.0f, 1.0f );
+	mDirLights[1].Diffuse = XMFLOAT4( 0.20f, 0.20f, 0.20f, 1.0f );
+	mDirLights[1].Specular = XMFLOAT4( 0.25f, 0.25f, 0.25f, 1.0f );
+	mDirLights[1].Direction = XMFLOAT3( -0.57735f, -0.57735f, 0.57735f );
+
+	mDirLights[2].Ambient = XMFLOAT4( 0.0f, 0.0f, 0.0f, 1.0f );
+	mDirLights[2].Diffuse = XMFLOAT4( 0.2f, 0.2f, 0.2f, 1.0f );
+	mDirLights[2].Specular = XMFLOAT4( 0.0f, 0.0f, 0.0f, 1.0f );
+	mDirLights[2].Direction = XMFLOAT3( 0.0f, -0.707f, -0.707f );
+
+	// Material
 	mMonkeyMaterial.Ambient = XMFLOAT4( 0.48f, 0.77f, 0.46f, 1.0f );
 	mMonkeyMaterial.Diffuse = XMFLOAT4( 0.48f, 0.77f, 0.46f, 1.0f );
 	mMonkeyMaterial.Specular = XMFLOAT4( 0.2f, 0.2f, 0.2f, 16.0f );
 
+	// Wrold pos
 	XMStoreFloat4x4( &mMonkeyWorldMat, XMMatrixIdentity() );
 }
 
@@ -161,7 +175,7 @@ void LightingApp::DrawScene()
 	md3dImmediateContext->ClearDepthStencilView( mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0 );
 
 	// Set per frame constants
-	Effects::BasicFX->SetPerFrameData( md3dImmediateContext, mDirLight, mEyePosW );
+	Effects::BasicFX->SetPerFrameData( md3dImmediateContext, mDirLights, mEyePosW );
 	
 	// Set raster state
 	md3dImmediateContext->RSSetState( mRasterState );
