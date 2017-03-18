@@ -60,8 +60,6 @@ private:
 	Material mMonkeyMaterial;
 	
 	DirectionalLight mDirLight;
-	PointLight mPointLight;
-	SpotLight mSpotLight;
 	XMFLOAT3 mEyePosW;
 
 	float mTheta;
@@ -99,19 +97,6 @@ LightingApp::LightingApp( HINSTANCE hInstance )
 	mDirLight.Diffuse = XMFLOAT4( 0.5f, 0.5f, 0.5f, 1.0f );
 	mDirLight.Specular = XMFLOAT4( 0.5f, 0.5f, 0.5f, 1.0f );
 	mDirLight.Direction = XMFLOAT3( 0.57735f, -0.57735f, 0.57735f );
-
-	mPointLight.Ambient = XMFLOAT4( 0.1f, 0.1f, 0.1f, 1.0f );
-	mPointLight.Diffuse = XMFLOAT4( 0.7f, 0.7f, 0.7f, 1.0f );
-	mPointLight.Specular = XMFLOAT4( 0.7f, 0.7f, 0.7f, 1.0f );
-	mPointLight.Att = XMFLOAT3( 0.0f, 0.1f, 0.0f );
-	mPointLight.Range = 25.0f;
-
-	mSpotLight.Ambient = XMFLOAT4( 0.0f, 0.0f, 0.0f, 1.0f );
-	mSpotLight.Diffuse = XMFLOAT4( 1.0f, 1.0f, 0.0f, 1.0f );
-	mSpotLight.Specular = XMFLOAT4( 1.0f, 1.0f, 1.0f, 1.0f );
-	mSpotLight.Att = XMFLOAT3( 1.0f, 0.0f, 0.0f );
-	mSpotLight.Spot = 96.0f;
-	mSpotLight.Range = 10000.0f;
 
 	mLastMousePos.x = 0;
 	mLastMousePos.y = 0;
@@ -173,17 +158,6 @@ void LightingApp::UpdateScene( float dt )
 
 	XMMATRIX V = XMMatrixLookAtLH( pos, target, up );
 	XMStoreFloat4x4( &mView, V );
-
-	// circulate point light
-	mPointLight.Position.x = 10.0f*cosf( 0.2f*mTimer.TotalTime() );
-	mPointLight.Position.z = 10.0f*sinf( 0.2f*mTimer.TotalTime() );
-	mPointLight.Position.y = 0.0f;
-
-	// The spotlight takes on the camera position and is aimed in the
-	// same direction the camera is looking.  In this way, it looks
-	// like we are holding a flashlight.
-	mSpotLight.Position = mEyePosW;
-	XMStoreFloat3( &mSpotLight.Direction, XMVector3Normalize( target - pos ) );
 }
 
 void LightingApp::DrawScene()
