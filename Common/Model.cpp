@@ -35,10 +35,10 @@ void Model::Draw( const XMMATRIX& viewProjectionMatrix, ConstantBuffer<Constants
 	XMMATRIX world = scale * transition * rotation;
 
 	// Transpose is needed from DirectxMath's spec.
-	XMMATRIX worldViewProj = XMMatrixTranspose( world * viewProjectionMatrix );
+	XMMATRIX worldViewProj = world * viewProjectionMatrix;
 
 	// 描画
-	m_batch->Draw( worldViewProj, constantBuffer );
+	m_batch->Draw( world, worldViewProj, constantBuffer );
 }
 
 void Model::SetTransition( const XMFLOAT3& transition )
